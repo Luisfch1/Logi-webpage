@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ejemplos de export — Logi</title>
+  <meta name="description" content="Ejemplos reales de export: PDF Logi, Word con plantilla de usuario y ZIP organizado." />
+  <link rel="icon" href="../assets/icon-512.png" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="../js/site.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="../index.html">
+        <img src="../assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+      <nav class="links">
+        <a href="../index.html#resultados">Resultados</a>
+        <a href="index.html">Tutoriales</a>
+        <a href="../index.html#instalar" data-open-install>Instalar</a>
+        <a href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <h1 class="h2">Ejemplos reales de export</h1>
+      <p class="sectionSub">Esto es lo que Logi entrega: informe listo para enviar.</p>
+
+      <div class="card">
+        <h3>PDF (formato Logi)</h3>
+        <p>Reporte fotográfico con encabezado, ítems y descripciones.</p>
+        <div style="margin-top:12px">
+          <img class="shot" src="../assets/export-pdf-logi.png" alt="Export PDF Logi" />
+        </div>
+        <div style="margin-top:12px">
+          <a class="btn primary" href="../assets/export-pdf-logi.png" target="_blank" rel="noopener">Abrir en grande</a>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>Word (plantilla del usuario)</h3>
+        <p>Formato del cliente: membrete, tablas y estructura propia.</p>
+        <div style="margin-top:12px">
+          <img class="shot" src="../assets/export-word-usuario.png" alt="Export Word con plantilla de usuario" />
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>ZIP (fotos organizadas)</h3>
+        <p>Estructura típica para entrega por día/rango.</p>
+        <div style="margin-top:12px; color:var(--muted); font-size:13px; line-height:1.6;">
+          <div style="padding:12px; border-radius:16px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04);">
+            <code>
+              /2026-02-01/<br/>
+              &nbsp;&nbsp;IMG_0001.jpg<br/>
+              &nbsp;&nbsp;IMG_0002.jpg<br/>
+              /2026-02-02/<br/>
+              &nbsp;&nbsp;IMG_0003.jpg<br/>
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <a class="btn ghost" href="index.html">← Volver a tutoriales</a>
+        <button class="btn primary" data-open-install>Instalar Logi</button>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
