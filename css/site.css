@@ -272,3 +272,39 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   border-radius:12px;
   padding:8px;
 }
+
+
+/* Clickable export thumbnails */
+.thumbLink{
+  position: relative;
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+}
+.thumbLink .shot{ display:block; }
+.thumbOverlay{
+  position:absolute;
+  inset:auto 12px 12px auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.92);
+  background: rgba(10,14,24,.55);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none;
+}
+.thumbLink:hover .thumbOverlay,
+.thumbLink:focus-visible .thumbOverlay{
+  opacity: 1;
+  transform: translateY(0);
+}
+.thumbLink:hover{
+  transform: translateY(-1px);
+}
