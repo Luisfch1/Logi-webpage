@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Backup y restauración</title>
+  <meta name="description" content="Tiempo estimado: 4 min · Protege tu información por proyecto" />
+  <link rel="icon" href="../assets/icon-512.png" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="../js/site.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="../index.html">
+        <img src="../assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+      <nav class="links">
+        <a href="index.html">Tutoriales</a>
+        <a href="../index.html#instalar" data-open-install>Instalar</a>
+        <a href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <h1 class="h2">Backup y restauración</h1>
+      <p class="sectionSub">Tiempo estimado: 4 min · Protege tu información por proyecto</p>
+
+      <div class="card">
+        <h3>Pasos</h3>
+        <ol style="color:var(--muted); line-height:1.8; margin: 10px 0 0 18px;">
+          <li>Entra a Configuración (dentro del proyecto o en el selector de proyectos, según versión).</li>
+<li>Selecciona <b>Backup</b> y genera el archivo del proyecto.</li>
+<li>Guarda el backup en un lugar seguro (Drive, PC o carpeta local).</li>
+<li>Para restaurar: abre <b>Restaurar</b> y elige el archivo backup.</li>
+<li>Verifica que: proyectos, fotos e ítems se cargaron correctamente.</li>
+        </ol>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h3>Errores comunes</h3>
+        <ul style="color:var(--muted); line-height:1.8; margin: 10px 0 0 18px;">
+          <li>Si el backup no carga, revisa que el archivo no esté incompleto (transferencias a veces fallan).</li>
+<li>Si aparecen ítems sin lista, asegúrate de haber incluido el listado del proyecto en el backup (cuando aplique).</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <a class="btn ghost" href="index.html">← Volver a tutoriales</a>
+        <button class="btn primary" data-open-install>Instalar Logi</button>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tutoriales — Logi</title>
+  <meta name="description" content="Tutoriales de Logi: instalación, export, backup y uso básico." />
+  <link rel="icon" href="../assets/icon-512.png" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="../js/site.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="../index.html">
+        <img src="../assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+      <nav class="links">
+        <a href="../index.html#funciones">Funciones</a>
+        <a href="../index.html#instalar" data-open-install>Instalar</a>
+        <a href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <h1 class="h2">Tutoriales</h1>
+      <p class="sectionSub">Guías cortas, directo al punto.</p>
+
+      <div class="grid3">
+        <a class="card" href="instalar-ios.html"><h3>Instalar en iPhone (PWA)</h3><p>Safari · 2 min</p></a>
+        <a class="card" href="instalar-android.html"><h3>Instalar en Android (PWA)</h3><p>Chrome · 2 min</p></a>
+        <a class="card" href="crear-proyecto.html"><h3>Crear proyecto y empezar</h3><p>3 min</p></a>
+        <a class="card" href="marcar-listo.html"><h3>Tomar fotos y marcar “Listo”</h3><p>3 min</p></a>
+        <a class="card" href="exportar-pdf.html"><h3>Exportar PDF por día</h3><p>4 min</p></a>
+        <a class="card" href="backup-restore.html"><h3>Backup y restauración</h3><p>4 min</p></a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <div>
+          <b>Logi</b>
+          <div class="muted">Bitácora fotográfica de obra</div>
+        </div>
+        <div class="footerActions">
+          <button class="btn primary" data-open-install>Instalar Logi</button>
+          <a class="btn" href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

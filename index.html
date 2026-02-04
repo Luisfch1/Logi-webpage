@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>Logi — Bitácora fotográfica de obra</title>
+  <meta name="description" content="Logi: bitácora fotográfica de obra. Captura, organiza por ítems y exporta en PDF/Word/ZIP. Offline-first." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Logi — Bitácora fotográfica de obra" />
+  <meta property="og:description" content="Captura, organiza por ítems y exporta en PDF/Word/ZIP. Offline-first." />
+  <meta property="og:image" content="assets/og-image.png" />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="assets/icon-512.png" />
+  <link rel="stylesheet" href="css/site.css" />
+
+  <!-- QR real via CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="js/site.js"></script>
+</head>
+
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="#inicio">
+        <img src="assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+
+      <nav class="links">
+        <a href="#funciones">Funciones</a>
+        <a href="tutoriales/index.html">Tutoriales</a>
+        <a href="#instalar" data-open-install>Instalar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="inicio">
+    <section class="hero">
+      <div class="heroLeft">
+        <div class="pill">Offline-first · PDF / Word / ZIP · Proyectos e ítems</div>
+        <h1 class="h1">Logi</h1>
+        <p class="sub">
+          <b>Bitácora fotográfica de obra.</b> Captura, organiza por ítems y exporta en PDF/Word/ZIP.
+          Minimalista por fuera, potente por dentro.
+        </p>
+
+        <div class="ctaRow" id="instalar">
+          <button class="btn primary" data-open-install>Instalar Logi</button>
+          <a class="btn" href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">
+            Abrir la app
+          </a>
+          <a class="btn ghost" href="tutoriales/index.html">Ver tutoriales</a>
+        </div>
+
+        <div class="bullets">
+          <div class="bullet">
+            <span class="dot lime"></span>
+            <div>
+              <b>Captura rápida en campo</b>
+              <div class="muted">Foto + descripción + listo (sin vueltas).</div>
+            </div>
+          </div>
+          <div class="bullet">
+            <span class="dot mag"></span>
+            <div>
+              <b>Orden por día e ítems</b>
+              <div class="muted">Encuentra lo que necesitas en segundos.</div>
+            </div>
+          </div>
+          <div class="bullet">
+            <span class="dot cyan"></span>
+            <div>
+              <b>Export profesional</b>
+              <div class="muted">PDF/Word y ZIP organizado por días/rangos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="heroRight">
+        <div class="mock">
+          <div class="mockTop">
+            <span>Vista rápida</span>
+            <span class="muted">Logi · UI ácida</span>
+          </div>
+          <div class="mockBody">
+            <img class="shot" src="assets/screenshot-hero.jpg" alt="Captura de Logi" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="h2">Cómo funciona</h2>
+      <p class="sectionSub">Tres pasos y quedas listo para entregar informe.</p>
+
+      <div class="grid3">
+        <div class="card">
+          <h3>1) Captura</h3>
+          <p>Fotos y descripción en segundos, pensado para obra.</p>
+        </div>
+        <div class="card">
+          <h3>2) Clasifica</h3>
+          <p>Asigna ítems por proyecto para mantener orden real.</p>
+        </div>
+        <div class="card">
+          <h3>3) Exporta</h3>
+          <p>PDF / Word / ZIP por día o rango, listo para compartir.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="funciones">
+      <h2 class="h2">Funciones</h2>
+      <p class="sectionSub">Minimal, rápido y enfocado: lo que sí se usa en campo.</p>
+
+      <div class="features">
+        <div class="feature"><b>Proyectos</b><span>Separación clara por obra/cliente.</span></div>
+        <div class="feature"><b>Ítems por proyecto</b><span>Clasificación ordenada para reportes.</span></div>
+        <div class="feature"><b>Galería por día</b><span>Revisión rápida y control de “listo”.</span></div>
+        <div class="feature"><b>Export PDF/DOCX/ZIP</b><span>Salida profesional en minutos.</span></div>
+        <div class="feature"><b>Plantillas</b><span>Tu formato, tu membrete, tu estilo.</span></div>
+        <div class="feature"><b>Backup/restore</b><span>Seguridad por proyecto (sin dramas).</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="ctaBlock">
+        <div>
+          <h2 class="h2">Tutoriales rápidos</h2>
+          <p class="sectionSub">Guías cortas para instalar, arrancar y exportar sin problemas.</p>
+        </div>
+        <a class="btn primary" href="tutoriales/index.html">Ir a tutoriales</a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <div>
+          <b>Logi</b>
+          <div class="muted">Bitácora fotográfica de obra · Offline-first</div>
+        </div>
+        <div class="footerActions">
+          <button class="btn primary" data-open-install>Instalar Logi</button>
+          <a class="btn ghost" href="tutoriales/index.html">Tutoriales</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Modal instalar -->
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
