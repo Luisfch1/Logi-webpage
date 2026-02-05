@@ -45,14 +45,18 @@
     <section class="hero">
       <div class="heroLeft">
         <div class="pill">Offline-first · PDF / Word / ZIP · Proyectos e ítems</div>
-        <h1 class="h1">Logi</h1>
+        <div class="heroBrand">
+          <span class="heroLogo">Logi</span>
+        </div>
+        <h1 class="h1">De fotos sueltas a un <span class="grad">PDF listo</span> para entregar.</h1>
         <p class="sub">
-          <b>Bitácora fotográfica de obra.</b> Captura, organiza por ítems y exporta en PDF/Word/ZIP.
-          Minimalista por fuera, potente por dentro.
+          Captura evidencia en campo, clasifica por ítems y exporta <b>PDF / Word / ZIP</b> en minutos.
+          Sin cuentas, sin señal, sin enredos.
         </p>
 
         <div class="ctaRow" id="instalar">
           <button class="btn primary" data-open-install>Instalar Logi</button>
+          <a class="btn" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener">Ver ejemplo PDF</a>
           <a class="btn" href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">
             Abrir la app
           </a>
@@ -85,31 +89,27 @@
       </div>
 
       <div class="heroRight">
-        <div class="heroShow">
-          <div class="heroShowHead">
-            <span class="muted">Lo importante</span>
-            <span>captura → orden → export</span>
+        <div class="stack">
+          <a class="stackBig" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener" aria-label="Abrir ejemplo PDF">
+            <div class="stackLabel">Así se ve el entregable</div>
+            <img class="shot" src="assets/export-pdf-logi.png" alt="Ejemplo de export PDF" />
+            <span class="thumbOverlay">Abrir PDF</span>
+          </a>
+
+          <div class="stackSmall" aria-label="Vista de la app">
+            <div class="stackLabel">En la app</div>
+            <img class="shot" src="assets/screenshot-hero.jpg" alt="Captura de la app" />
           </div>
 
-          <div class="shotStack" aria-label="Capturas de la app Logi">
-            <figure class="stackCard c1">
-              <img src="assets/hero-captura.png" alt="Pantalla de proyecto y acceso a captura/galería/export" />
-              <figcaption>Proyecto y navegación</figcaption>
-            </figure>
-            <figure class="stackCard c2">
-              <img src="assets/hero-export.png" alt="Pantalla de exportación con botón Exportar" />
-              <figcaption>Export en 1 toque</figcaption>
-            </figure>
-            <figure class="stackCard c3">
-              <img src="assets/hero-plantilla.png" alt="Selector de plantillas de página para PDF/DOCX" />
-              <figcaption>Plantillas rápidas</figcaption>
-            </figure>
-          </div>
-
-          <div class="heroMini">
-            <div class="miniTag"><span class="miniDot lime"></span>Offline-first real</div>
-            <div class="miniTag"><span class="miniDot cyan"></span>PDF/Word/ZIP</div>
-            <div class="miniTag"><span class="miniDot mag"></span>Ítems por proyecto</div>
+          <div class="stackZip" aria-label="ZIP organizado">
+            <div class="stackLabel">ZIP ordenado</div>
+            <code>
+              /2026-02-01/<br/>
+              &nbsp;&nbsp;IMG_0001.jpg<br/>
+              &nbsp;&nbsp;IMG_0002.jpg<br/>
+              /2026-02-02/<br/>
+              &nbsp;&nbsp;IMG_0003.jpg<br/>
+            </code>
           </div>
         </div>
       </div>
@@ -160,20 +160,32 @@
 
     <section class="section">
       <h2 class="h2">Cómo funciona</h2>
-      <p class="sectionSub">Tres pasos y quedas listo para entregar informe.</p>
+      <p class="sectionSub">Tres pasos. El resultado queda listo para entregar (PDF / Word / ZIP).</p>
 
       <div class="grid3">
-        <div class="card">
+        <div class="card stepCard">
           <h3>1) Captura</h3>
-          <p>Fotos y descripción en segundos, pensado para obra.</p>
+          <p>Foto + descripción en segundos, pensado para obra.</p>
+          <div class="stepMedia">
+            <img class="shot" src="assets/screenshot-hero.jpg" alt="Captura: pantalla de Logi" style="object-position: 50% 22%" />
+          </div>
         </div>
-        <div class="card">
-          <h3>2) Clasifica</h3>
-          <p>Asigna ítems por proyecto para mantener orden real.</p>
+        <div class="card stepCard">
+          <h3>2) Organiza</h3>
+          <p>Galería por día e ítems. Encuentras todo sin buscar de más.</p>
+          <div class="stepMedia">
+            <img class="shot" src="assets/screenshot-hero.jpg" alt="Organización: galería en Logi" style="object-position: 50% 55%" />
+          </div>
         </div>
-        <div class="card">
+        <div class="card stepCard">
           <h3>3) Exporta</h3>
-          <p>PDF / Word / ZIP por día o rango, listo para compartir.</p>
+          <p>Un toque y queda listo: PDF / Word / ZIP por día o rango.</p>
+          <div class="stepMedia">
+            <a class="thumbLink" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener" aria-label="Abrir PDF de ejemplo">
+              <img class="shot" src="assets/export-pdf-logi-detail.png" alt="Export: ejemplo PDF" />
+              <span class="thumbOverlay">Ver PDF</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -206,7 +218,7 @@
       <div class="footerRow">
         <div>
           <b>Logi</b>
-          <div class="muted">Bitácora fotográfica de obra · Offline-first</div>
+          <div class="muted">Bitácora fotográfica de obra · Offline-first · <span class="muted">Web v7.1</span></div>
         </div>
         <div class="footerActions">
           <button class="btn primary" data-open-install>Instalar Logi</button>

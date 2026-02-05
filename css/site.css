@@ -20,24 +20,11 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
   background:
-    radial-gradient(1200px 600px at 15% 10%, rgba(118,236,64,.20), transparent 55%),
-    radial-gradient(900px 500px at 85% 20%, rgba(200,75,188,.20), transparent 55%),
-    radial-gradient(900px 700px at 60% 90%, rgba(55,215,255,.12), transparent 60%),
+    radial-gradient(1200px 600px at 15% 10%, rgba(118,236,64,.16), transparent 56%),
+    radial-gradient(900px 500px at 85% 20%, rgba(200,75,188,.16), transparent 56%),
+    radial-gradient(900px 700px at 60% 90%, rgba(55,215,255,.10), transparent 62%),
     linear-gradient(180deg, var(--bg), var(--bg2));
   color:var(--text);
-}
-
-/* grano sutil para que el glass “se lea” mejor */
-body:before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background:
-    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px);
-  opacity:.08;
-  mix-blend-mode: overlay;
 }
 a{color:inherit; text-decoration:none}
 .wrap{max-width:1100px; margin:0 auto; padding:0 18px}
@@ -113,21 +100,34 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   .hero{grid-template-columns:1fr; padding-top:34px}
 }
 
-.h1{
-  font-size:52px; letter-spacing:-1px; margin:0 0 8px;
-  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(118,236,64,.95), rgba(55,215,255,.92));
+.h1{font-size:52px; letter-spacing:-1px; margin:0 0 8px}
+@media (max-width: 540px){ .h1{font-size:40px} }
+
+.heroBrand{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+.heroLogo{
+  font-weight:800;
+  letter-spacing:-.6px;
+  font-size:14px;
+  padding:6px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.86);
+}
+
+.grad{
+  background: linear-gradient(90deg, rgba(118,236,64,.95), rgba(55,215,255,.92), rgba(200,75,188,.92));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-@media (max-width: 540px){ .h1{font-size:40px} }
 .sub{font-size:16px; color:var(--muted); margin:0 0 18px; max-width:60ch}
 .pill{
   display:inline-flex; gap:10px; align-items:center;
   padding:8px 10px; border-radius:999px;
-  border:1px solid rgba(118,236,64,.22);
-  background: rgba(118,236,64,.06);
-  color: rgba(255,255,255,.78);
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
   font-size:12px;
   margin-bottom:16px;
 }
@@ -138,10 +138,8 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   display:flex; gap:10px; align-items:flex-start;
   padding:12px;
   border-radius: var(--radius);
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.05);
-  backdrop-filter: blur(14px) saturate(1.12);
-  -webkit-backdrop-filter: blur(14px) saturate(1.12);
+  border:1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.04);
 }
 .dot{width:10px; height:10px; border-radius:50%; margin-top:5px; flex:0 0 auto}
 .dot.lime{background:var(--lime); box-shadow:0 0 0 6px rgba(118,236,64,.12)}
@@ -154,6 +152,69 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
   box-shadow: var(--shadow);
   overflow:hidden;
+}
+
+/* Hero stack (resultado + app + zip) */
+.stack{position:relative; display:grid; gap:12px}
+.stackLabel{
+  position:absolute;
+  top:12px;
+  left:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color: rgba(255,255,255,.86);
+  background: rgba(10,14,24,.55);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(10px);
+}
+.stackBig{
+  position:relative;
+  display:block;
+  border-radius: 26px;
+  border:1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  transform: translateZ(0);
+}
+.stackBig .shot{border:0; border-radius:0}
+.stackBig:hover{transform: translateY(-2px)}
+
+.stackSmall{
+  position:absolute;
+  right: -6px;
+  top: 52%;
+  width: 62%;
+  max-width: 360px;
+  border-radius: 24px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+.stackSmall .shot{border:0; border-radius:0}
+
+.stackZip{
+  position:absolute;
+  left: -6px;
+  bottom: -10px;
+  width: 64%;
+  max-width: 420px;
+  border-radius: 20px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  padding:14px;
+  color:var(--muted);
+  font-size: 13px;
+}
+.stackZip code{display:block; line-height:1.55}
+
+@media (max-width: 900px){
+  .stackSmall, .stackZip{position:relative; inset:auto; width:100%; max-width:none}
 }
 .mockTop{
   display:flex; align-items:center; justify-content:space-between;
@@ -171,85 +232,6 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   background: rgba(0,0,0,.25);
 }
 
-/* Hero visual (más “dice” lo que hace la app) */
-.heroShow{
-  border-radius: 26px;
-  border:1px solid rgba(255,255,255,.12);
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-  box-shadow: var(--shadow);
-  overflow:hidden;
-  position:relative;
-}
-.heroShow:before{
-  content:"";
-  position:absolute;
-  inset:-2px;
-  background:
-    radial-gradient(500px 320px at 20% 0%, rgba(118,236,64,.20), transparent 60%),
-    radial-gradient(500px 320px at 80% 0%, rgba(200,75,188,.16), transparent 60%),
-    radial-gradient(520px 340px at 50% 100%, rgba(55,215,255,.14), transparent 60%);
-  opacity:.7;
-  pointer-events:none;
-}
-.heroShowHead{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 14px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  color:var(--muted);
-  font-size:12px;
-}
-.shotStack{
-  position:relative;
-  padding:16px 16px 4px;
-  min-height: 520px;
-}
-@media (max-width: 900px){
-  .shotStack{min-height: 460px}
-}
-.stackCard{
-  position:absolute;
-  left:50%;
-  transform: translateX(-50%);
-  width:min(420px, 92%);
-  filter: drop-shadow(0 24px 60px rgba(0,0,0,.45));
-}
-.stackCard img{width:100%; display:block}
-.stackCard figcaption{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--muted);
-  text-align:center;
-}
-.stackCard.c1{top:22px; transform: translateX(-50%) rotate(-2deg)}
-.stackCard.c2{top:126px; transform: translateX(-50%) rotate(1.5deg)}
-.stackCard.c3{top:258px; transform: translateX(-50%) rotate(-1deg)}
-
-.heroMini{
-  position:relative;
-  display:flex;
-  gap:10px;
-  padding:14px 16px 16px;
-  flex-wrap:wrap;
-}
-.miniTag{
-  display:inline-flex;
-  gap:8px;
-  align-items:center;
-  padding:8px 10px;
-  border-radius: 999px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  color: var(--muted);
-  font-size:12px;
-}
-.miniDot{width:8px; height:8px; border-radius:50%}
-.miniDot.lime{background:var(--lime); box-shadow:0 0 0 6px rgba(118,236,64,.10)}
-.miniDot.mag{background:var(--mag); box-shadow:0 0 0 6px rgba(200,75,188,.10)}
-.miniDot.cyan{background:var(--cyan); box-shadow:0 0 0 6px rgba(55,215,255,.10)}
-
 .section{padding:34px 0}
 .h2{font-size:20px; margin:0 0 12px; letter-spacing:-.2px}
 .sectionSub{margin:0 0 18px; color:var(--muted); max-width:75ch}
@@ -265,6 +247,10 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   position:relative;
   overflow:hidden;
 }
+
+.stepCard .stepMedia{margin-top:12px}
+.stepCard .stepMedia .shot{height:220px; object-fit:cover}
+.stepCard .stepMedia .thumbLink{border-radius:18px}
 .card:before{
   content:"";
   position:absolute; inset:-2px;
