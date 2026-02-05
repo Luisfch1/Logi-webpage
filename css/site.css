@@ -20,11 +20,24 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
   background:
-    radial-gradient(1200px 600px at 15% 10%, rgba(118,236,64,.14), transparent 55%),
-    radial-gradient(900px 500px at 85% 20%, rgba(200,75,188,.14), transparent 55%),
-    radial-gradient(900px 700px at 60% 90%, rgba(55,215,255,.08), transparent 60%),
+    radial-gradient(1200px 600px at 15% 10%, rgba(118,236,64,.20), transparent 55%),
+    radial-gradient(900px 500px at 85% 20%, rgba(200,75,188,.20), transparent 55%),
+    radial-gradient(900px 700px at 60% 90%, rgba(55,215,255,.12), transparent 60%),
     linear-gradient(180deg, var(--bg), var(--bg2));
   color:var(--text);
+}
+
+/* grano sutil para que el glass “se lea” mejor */
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px);
+  opacity:.08;
+  mix-blend-mode: overlay;
 }
 a{color:inherit; text-decoration:none}
 .wrap{max-width:1100px; margin:0 auto; padding:0 18px}
@@ -100,15 +113,21 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   .hero{grid-template-columns:1fr; padding-top:34px}
 }
 
-.h1{font-size:52px; letter-spacing:-1px; margin:0 0 8px}
+.h1{
+  font-size:52px; letter-spacing:-1px; margin:0 0 8px;
+  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(118,236,64,.95), rgba(55,215,255,.92));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 @media (max-width: 540px){ .h1{font-size:40px} }
 .sub{font-size:16px; color:var(--muted); margin:0 0 18px; max-width:60ch}
 .pill{
   display:inline-flex; gap:10px; align-items:center;
   padding:8px 10px; border-radius:999px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  color: var(--muted);
+  border:1px solid rgba(118,236,64,.22);
+  background: rgba(118,236,64,.06);
+  color: rgba(255,255,255,.78);
   font-size:12px;
   margin-bottom:16px;
 }
@@ -119,8 +138,10 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   display:flex; gap:10px; align-items:flex-start;
   padding:12px;
   border-radius: var(--radius);
-  border:1px solid rgba(255,255,255,.09);
-  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(14px) saturate(1.12);
+  -webkit-backdrop-filter: blur(14px) saturate(1.12);
 }
 .dot{width:10px; height:10px; border-radius:50%; margin-top:5px; flex:0 0 auto}
 .dot.lime{background:var(--lime); box-shadow:0 0 0 6px rgba(118,236,64,.12)}
@@ -149,6 +170,85 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   display:block;
   background: rgba(0,0,0,.25);
 }
+
+/* Hero visual (más “dice” lo que hace la app) */
+.heroShow{
+  border-radius: 26px;
+  border:1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  position:relative;
+}
+.heroShow:before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:
+    radial-gradient(500px 320px at 20% 0%, rgba(118,236,64,.20), transparent 60%),
+    radial-gradient(500px 320px at 80% 0%, rgba(200,75,188,.16), transparent 60%),
+    radial-gradient(520px 340px at 50% 100%, rgba(55,215,255,.14), transparent 60%);
+  opacity:.7;
+  pointer-events:none;
+}
+.heroShowHead{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  color:var(--muted);
+  font-size:12px;
+}
+.shotStack{
+  position:relative;
+  padding:16px 16px 4px;
+  min-height: 520px;
+}
+@media (max-width: 900px){
+  .shotStack{min-height: 460px}
+}
+.stackCard{
+  position:absolute;
+  left:50%;
+  transform: translateX(-50%);
+  width:min(420px, 92%);
+  filter: drop-shadow(0 24px 60px rgba(0,0,0,.45));
+}
+.stackCard img{width:100%; display:block}
+.stackCard figcaption{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+}
+.stackCard.c1{top:22px; transform: translateX(-50%) rotate(-2deg)}
+.stackCard.c2{top:126px; transform: translateX(-50%) rotate(1.5deg)}
+.stackCard.c3{top:258px; transform: translateX(-50%) rotate(-1deg)}
+
+.heroMini{
+  position:relative;
+  display:flex;
+  gap:10px;
+  padding:14px 16px 16px;
+  flex-wrap:wrap;
+}
+.miniTag{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  font-size:12px;
+}
+.miniDot{width:8px; height:8px; border-radius:50%}
+.miniDot.lime{background:var(--lime); box-shadow:0 0 0 6px rgba(118,236,64,.10)}
+.miniDot.mag{background:var(--mag); box-shadow:0 0 0 6px rgba(200,75,188,.10)}
+.miniDot.cyan{background:var(--cyan); box-shadow:0 0 0 6px rgba(55,215,255,.10)}
 
 .section{padding:34px 0}
 .h2{font-size:20px; margin:0 0 12px; letter-spacing:-.2px}
@@ -307,4 +407,95 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
 }
 .thumbLink:hover{
   transform: translateY(-1px);
+}
+
+
+/* ------------------------------------------------------------
+   Glassmorphism (sutil) + fondo con acentos por scroll (Logi)
+   Nota: backdrop-filter difumina lo que está "detrás". Por eso
+   el fondo tiene detalle suave para que el vidrio se note.
+------------------------------------------------------------ */
+
+body{
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fondo fijo con "acentos" en distintos niveles (se perciben al scrollear) */
+body::before{
+  content:"";
+  position: fixed;
+  inset: -18%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    /* Azul profundo base */
+    radial-gradient(1000px 620px at 18% 8%, rgba(40,120,255,.10), transparent 60%),
+    radial-gradient(980px 640px at 82% 18%, rgba(0,220,255,.08), transparent 62%),
+
+    /* Verde ácido (arriba) */
+    radial-gradient(900px 620px at 18% 32%, rgba(120,255,120,.09), transparent 62%),
+
+    /* Morado (medio) */
+    radial-gradient(1000px 700px at 70% 55%, rgba(170,90,255,.08), transparent 64%),
+
+    /* Naranja (medio-bajo) */
+    radial-gradient(900px 640px at 22% 72%, rgba(255,150,60,.07), transparent 64%),
+
+    /* Rojo (abajo) */
+    radial-gradient(920px 660px at 78% 88%, rgba(255,70,110,.07), transparent 66%),
+
+    /* Fondo oscuro */
+    linear-gradient(180deg, #050812 0%, #05060f 45%, #04050b 100%);
+  transform: translateZ(0);
+}
+
+/* Ruido finito (muy sutil) para textura tipo "vidrio" */
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+/* Tarjetas glass: blur sutil tipo iOS/Apple (no "aero" pesado) */
+.card{
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.10);
+
+  backdrop-filter: blur(16px) saturate(1.18);
+  -webkit-backdrop-filter: blur(16px) saturate(1.18);
+}
+
+/* Brillo sutil diagonal (reflejo) */
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  pointer-events:none;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,.14),
+    rgba(255,255,255,0) 42%,
+    rgba(255,255,255,.06) 92%);
+  opacity: .28;
+}
+
+.card{ position: relative; }
+
+/* Ajuste leve de contraste de texto dentro de cards */
+.card h3{ color: rgba(255,255,255,.96); }
+.card p{ color: rgba(255,255,255,.78); }
+
+/* En pantallas pequeñas, baja un toque el ruido para que no "ensucie" */
+@media (max-width: 520px){
+  body::after{ opacity: .035; }
 }
