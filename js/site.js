@@ -1,4 +1,77 @@
 (function () {
+  // ------------------------------------------------------------
+  // Fondo ácido por secciones (aurora). Mantiene el glass bonito
+  // sin ensuciar el contenido.
+  // ------------------------------------------------------------
+  const THEMES = {
+    hero: {
+      a1: "rgba(118,236,64,.26)",
+      a2: "rgba(55,215,255,.16)",
+      a3: "rgba(200,75,188,.14)",
+      a4: "rgba(255,150,60,.12)",
+    },
+    resultados: {
+      a1: "rgba(55,215,255,.18)",
+      a2: "rgba(200,75,188,.18)",
+      a3: "rgba(118,236,64,.16)",
+      a4: "rgba(255,150,60,.10)",
+    },
+    como: {
+      a1: "rgba(118,236,64,.22)",
+      a2: "rgba(255,150,60,.14)",
+      a3: "rgba(55,215,255,.14)",
+      a4: "rgba(200,75,188,.12)",
+    },
+    funciones: {
+      a1: "rgba(200,75,188,.18)",
+      a2: "rgba(118,236,64,.18)",
+      a3: "rgba(55,215,255,.14)",
+      a4: "rgba(255,150,60,.10)",
+    },
+    cta: {
+      a1: "rgba(255,150,60,.16)",
+      a2: "rgba(118,236,64,.18)",
+      a3: "rgba(55,215,255,.14)",
+      a4: "rgba(200,75,188,.12)",
+    },
+  };
+
+  function setTheme(name) {
+    const t = THEMES[name];
+    if (!t) return;
+    const r = document.documentElement;
+    r.style.setProperty("--a1", t.a1);
+    r.style.setProperty("--a2", t.a2);
+    r.style.setProperty("--a3", t.a3);
+    r.style.setProperty("--a4", t.a4);
+  }
+
+  // Solo si existe IntersectionObserver
+  if ("IntersectionObserver" in window) {
+    const sections = Array.from(document.querySelectorAll("[data-theme]"));
+    if (sections.length) {
+      let current = null;
+      const io = new IntersectionObserver(
+        (entries) => {
+          // Nos quedamos con el más visible
+          const best = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!best) return;
+          const next = best.target.getAttribute("data-theme");
+          if (next && next !== current) {
+            current = next;
+            setTheme(next);
+          }
+        },
+        { threshold: [0.22, 0.35, 0.5, 0.65], rootMargin: "-20% 0px -45% 0px" }
+      );
+      sections.forEach((s) => io.observe(s));
+      // Tema inicial
+      setTheme(sections[0].getAttribute("data-theme") || "hero");
+    }
+  }
+
   function platform() {
     const ua = navigator.userAgent || "";
     const isIOS = /iPhone|iPad|iPod/i.test(ua);

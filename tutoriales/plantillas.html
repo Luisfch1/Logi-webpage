@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plantillas de Word del usuario</title>
+  <meta name="description" content="Tiempo estimado: 4 min · Usa tu propio membrete/estructura para exportar en Word" />
+  <link rel="icon" href="../assets/icon-512.png" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="../js/site.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="../index.html">
+        <img src="../assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+      <nav class="links">
+        <a href="index.html">Tutoriales</a>
+        <a href="../index.html#instalar" data-open-install>Instalar</a>
+        <a href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <h1 class="h2">Plantillas de Word del usuario</h1>
+      <p class="sectionSub">Tiempo estimado: 4 min · Tu membrete y tu estructura, sin pelear con formatos.</p>
+
+      <div class="grid3">
+        <div class="card">
+          <h3>1) Sube tu plantilla</h3>
+          <p>Desde <b>Plantillas</b>, selecciona tu archivo .docx y deja que Logi lo valide.</p>
+          <div class="stepMedia" style="margin-top:12px">
+            <img class="shot" src="../assets/step-organiza.jpg" alt="Pantalla: selección de plantilla" style="height:220px; object-fit:cover" />
+          </div>
+        </div>
+        <div class="card">
+          <h3>2) Prueba / previsualiza</h3>
+          <p>Antes de exportar en serio, haz una prueba con datos de muestra para ver márgenes, fotos y textos.</p>
+          <div class="stepMedia" style="margin-top:12px">
+            <img class="shot" src="../assets/export-word-usuario-detail.png" alt="Previsualización: Word con plantilla" style="height:220px; object-fit:cover" />
+          </div>
+        </div>
+        <div class="card">
+          <h3>3) Exporta en Word</h3>
+          <p>Ahora sí: exporta por día o rango. Logi respeta el formato de tu cliente.</p>
+          <div style="margin-top:12px">
+            <a class="thumbLink" href="../assets/export-word-usuario.pdf" target="_blank" rel="noopener" aria-label="Abrir ejemplo (Word plantilla)">
+              <img class="shot" src="../assets/export-word-usuario-detail.png" alt="Ejemplo Word con plantilla" />
+              <span class="thumbOverlay">Abrir PDF</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>Tips rápidos</h3>
+        <ul style="color:var(--muted); line-height:1.8; margin: 10px 0 0 18px;">
+          <li>Usa títulos y tablas en Word (evita textos “a mano” pegados a imágenes).</li>
+          <li>Si tu plantilla tiene encabezado/pie, deja espacio suficiente arriba/abajo para fotos y descripciones.</li>
+          <li>Si algo se desborda, ajusta márgenes/estilos en tu plantilla y vuelve a subirla.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <a class="btn ghost" href="index.html">← Volver a tutoriales</a>
+        <button class="btn primary" data-open-install>Instalar Logi</button>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

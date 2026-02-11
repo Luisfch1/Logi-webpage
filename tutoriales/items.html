@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ítems por proyecto</title>
+  <meta name="description" content="Tiempo estimado: 3 min · Asigna fotos a ítems y filtra para exportar ordenado" />
+  <link rel="icon" href="../assets/icon-512.png" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script defer src="../js/site.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="../index.html">
+        <img src="../assets/icon-512.png" alt="Logi" />
+        <div class="brandText">
+          <strong>Logi</strong>
+          <span>Bitácora fotográfica de obra</span>
+        </div>
+      </a>
+      <nav class="links">
+        <a href="index.html">Tutoriales</a>
+        <a href="../index.html#instalar" data-open-install>Instalar</a>
+        <a href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <h1 class="h2">Ítems por proyecto</h1>
+      <p class="sectionSub">Tiempo estimado: 3 min · Asigna fotos a ítems y filtra para exportar ordenado</p>
+
+      <div class="card">
+        <h3>¿Para qué sirve?</h3>
+        <p>Los ítems te permiten clasificar tus fotos por actividad (ej: “Replanteo”, “Demolición”, “Acero”, “Concreto”).
+          Después, puedes filtrar por ítem al exportar y el informe queda más limpio.</p>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h3>Pasos</h3>
+        <ol style="color:var(--muted); line-height:1.8; margin: 10px 0 0 18px;">
+          <li>Entra al <b>proyecto</b> donde estás trabajando.</li>
+          <li>Abre una foto (o toma una nueva).</li>
+          <li>En el selector de <b>ítem</b>, elige uno existente o crea uno nuevo si aplica.</li>
+          <li>Repite con 2–3 fotos de prueba y luego prueba el <b>filtro por ítem</b> en galería/export.</li>
+        </ol>
+
+        <div style="margin-top:14px;">
+          <img class="shot" src="../assets/step-organiza.jpg" alt="Filtro por día e ítem" />
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h3>Tips rápidos</h3>
+        <ul style="color:var(--muted); line-height:1.8; margin: 10px 0 0 18px;">
+          <li>Usa nombres cortos: <b>“Acero”</b>, <b>“Cimbra”</b>, <b>“Relleno”</b>… y ya.</li>
+          <li>Si el cliente te pide códigos, ponlos al inicio: <b>“1.2 Demolición”</b>.</li>
+          <li>Si una foto aplica a dos cosas, elige el ítem que mande en el informe (lo que más te auditan).</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerRow">
+        <a class="btn ghost" href="index.html">← Volver a tutoriales</a>
+        <a class="btn" href="exportar.html">Siguiente: Export →</a>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modalOverlay" id="installOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Instalar Logi">
+      <div class="modalHead">
+        <strong id="installTitle">Instalar Logi</strong>
+        <button class="x" id="installClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted" id="installIntro"></p>
+        <div class="steps" id="installSteps"></div>
+        <div class="qr" id="qrBox" hidden>
+          <div class="qrText">
+            <b>Abre esta web en tu celular</b>
+            <div class="muted">Escanea el QR o copia el link:</div>
+            <code id="qrUrl"></code>
+          </div>
+          <canvas id="qrCanvas" width="170" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
