@@ -108,6 +108,25 @@ code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Libera
   .hero{grid-template-columns:1fr; padding-top:34px}
 }
 
+/* Hero visual balance (desktop)
+   The app screenshot is tall; constrain height so it doesn't dominate the first fold. */
+.heroRight{display:flex; justify-content:flex-end}
+.heroVisual{max-width:520px}
+.heroVisual .shot{
+  height: 520px;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+@media (max-width: 1100px){
+  .heroVisual{max-width:480px}
+  .heroVisual .shot{height: 480px}
+}
+@media (max-width: 900px){
+  .heroRight{justify-content:flex-start}
+  .heroVisual{max-width:100%}
+  .heroVisual .shot{height:auto; object-fit:contain}
+}
+
 .h1{font-size:52px; letter-spacing:-1px; margin:0 0 8px}
 @media (max-width: 540px){ .h1{font-size:40px} }
 
