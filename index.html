@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#0b1020" />
+  <meta name="theme-color" content="#fbfbff" />
   <title>Logi — Bitácora fotográfica de obra</title>
   <meta name="description" content="Logi: bitácora fotográfica de obra. Captura, organiza por ítems y exporta en PDF/Word/ZIP. Offline-first." />
 
@@ -33,7 +33,8 @@
       </a>
 
       <nav class="links">
-        <a href="#resultados">Resultados</a>
+        <a href="#proceso">Paso a paso</a>
+        <a href="#resultados">Entregables</a>
         <a href="#funciones">Funciones</a>
         <a href="tutoriales/index.html">Tutoriales</a>
         <a href="#instalar" data-open-install>Instalar</a>
@@ -41,63 +42,126 @@
     </div>
   </header>
 
-  <main class="wrap" id="inicio">
-    <section class="hero" data-theme="hero">
-      <div class="heroLeft">
-        <div class="heroBrand">
-          <span class="heroLogo">Logi</span>
-        </div>
-        <h1 class="h1">De fotos sueltas a un <span class="grad">PDF listo</span> para entregar.</h1>
-        <p class="sub">
-          Captura evidencia en campo, organiza por ítems y exporta <b>PDF / Word / ZIP</b>.
-          <span class="subSmall">Funciona <b>offline</b>. Sin cuentas. Sin enredos.</span>
-        </p>
+  <main id="inicio">
+    <!-- HERO (claro) -->
+    <section class="scene scene--paper hero" data-scene="paper">
+      <div class="wrap heroGrid">
+        <div class="heroLeft">
+          <div class="kicker">BITÁCORA FOTOGRÁFICA DE OBRA</div>
+          <h1 class="h1">De fotos sueltas a un <span class="h1Accent">informe listo</span>.</h1>
+          <p class="sub">Captura, organiza por ítems y exporta <b>PDF / Word / ZIP</b>. Funciona <b>offline</b>, sin cuentas, sin enredos.</p>
 
-        <div class="ctaRow" id="instalar">
-          <button class="btn primary" data-open-install>Instalar Logi</button>
-          <a class="btn" href="#resultados">Ver entregables</a>
-          <a class="btn ghost" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener">Ejemplo PDF</a>
-          <a class="linkInline" href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
-          <span class="dotSep">•</span>
-          <a class="linkInline" href="tutoriales/index.html">Tutoriales</a>
-        </div>
+          <div class="ctaRow" id="instalar">
+            <button class="btn primary" data-open-install>Instalar Logi</button>
+            <a class="btn" href="#proceso">Ver paso a paso</a>
+            <a class="btn ghost" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener">Ejemplo PDF</a>
+            <a class="btn ghost" href="https://luisfch1.github.io/Logi2/" target="_blank" rel="noopener">Abrir la app</a>
+          </div>
 
-        <div class="bullets">
-          <div class="bullet">
-            <span class="dot lime"></span>
-            <div>
-              <b>Captura rápida en campo</b>
-              <div class="muted">Foto + descripción + listo (sin vueltas).</div>
+          <div class="heroMiniRow" aria-label="Resumen del flujo">
+            <div class="mini">
+              <div class="miniTag">CAPTURA</div>
+              <div class="miniCard"><img src="assets/step-captura.jpg" alt="Captura" loading="lazy" /></div>
             </div>
-          </div>
-          <div class="bullet">
-            <span class="dot mag"></span>
-            <div>
-              <b>Orden por día e ítems</b>
-              <div class="muted">Encuentra lo que necesitas en segundos.</div>
+            <div class="mini">
+              <div class="miniTag">ORGANIZA</div>
+              <div class="miniCard"><img src="assets/step-organiza.jpg" alt="Organiza" loading="lazy" /></div>
             </div>
-          </div>
-          <div class="bullet">
-            <span class="dot cyan"></span>
-            <div>
-              <b>Export profesional</b>
-              <div class="muted">PDF/Word y ZIP organizado por días/rangos.</div>
+            <div class="mini">
+              <div class="miniTag">EXPORTA</div>
+              <div class="miniCard"><img src="assets/step-exporta.jpg" alt="Exporta" loading="lazy" /></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="heroRight" aria-label="Vista de la app">
-        <div class="heroVisual">
-          <div class="heroVisualLabel">Vista real de la app</div>
-          <img class="shot" src="assets/screenshot-hero.jpg" alt="Captura de la app Logi" />
+        <div class="heroRight" aria-label="Entregables">
+          <div class="heroStack">
+            <a class="stackCard" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener">
+              <div class="stackTag">PDF</div>
+              <img src="assets/export-pdf-logi-detail.png" alt="Ejemplo PDF" loading="lazy" />
+            </a>
+            <a class="stackCard" href="assets/export-word-usuario.pdf" target="_blank" rel="noopener">
+              <div class="stackTag">Word (plantilla)</div>
+              <img src="assets/export-word-usuario-detail.png" alt="Ejemplo Word" loading="lazy" />
+            </a>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="resultados" data-theme="resultados">
-      <h2 class="h2">Lo que entregas</h2>
-      <p class="sectionSub">El producto de Logi es el export: informe listo para enviar (PDF / Word / ZIP).</p>
+    <!-- SCROLL → HORIZONTAL (proceso) -->
+    <section class="scrolly" id="proceso" aria-label="Paso a paso de Logi" data-scene="paper">
+      <div class="scrollySticky">
+        <div class="scrollyProgress" aria-hidden="true">
+          <div class="dots" id="scrollyDots"></div>
+          <div class="dotsLabel" id="scrollyLabel">CAPTURA</div>
+        </div>
+
+        <div class="hTrack" id="hTrack">
+          <section class="panel panel--capture scene" data-scene="capture">
+            <div class="wrap panelGrid">
+              <div class="panelCopy">
+                <div class="panelKicker">1 / 3</div>
+                <h2 class="panelTitle">CAPTURA</h2>
+                <p class="panelSub">Foto + descripción en segundos. Pensado para obra.</p>
+              </div>
+              <div class="panelVisual">
+                <div class="mediaCard">
+                  <img src="assets/step-captura.jpg" alt="Captura en Logi" loading="lazy" />
+                  <div class="mediaHud">
+                    <button class="round" type="button" aria-label="Reproducir demo">▶</button>
+                    <button class="round" type="button" aria-label="Silenciar">🔈</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel--organiza scene" data-scene="organiza">
+            <div class="wrap panelGrid">
+              <div class="panelCopy">
+                <div class="panelKicker">2 / 3</div>
+                <h2 class="panelTitle">ORGANIZA</h2>
+                <p class="panelSub">Galería por día e ítems. Encuentras todo sin perder tiempo.</p>
+              </div>
+              <div class="panelVisual">
+                <div class="mediaCard">
+                  <img src="assets/step-organiza.jpg" alt="Organizar en Logi" loading="lazy" />
+                  <div class="mediaHud">
+                    <button class="round" type="button" aria-label="Reproducir demo">▶</button>
+                    <button class="round" type="button" aria-label="Silenciar">🔈</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel--exporta scene" data-scene="exporta">
+            <div class="wrap panelGrid">
+              <div class="panelCopy">
+                <div class="panelKicker">3 / 3</div>
+                <h2 class="panelTitle">EXPORTA</h2>
+                <p class="panelSub">PDF / Word (plantilla) / ZIP organizado por día o rango.</p>
+              </div>
+              <div class="panelVisual">
+                <div class="mediaCard">
+                  <img src="assets/export-pdf-logi-detail.png" alt="Export PDF" loading="lazy" />
+                  <div class="mediaHud">
+                    <button class="round" type="button" aria-label="Ver PDF">📄</button>
+                    <button class="round" type="button" aria-label="Ver Word">📝</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene scene--paper section" id="resultados" data-scene="paper">
+      <div class="wrap">
+      <h2 class="h2">Entregables</h2>
+      <p class="sectionSub">El resultado de Logi es el export: informe listo para enviar (PDF / Word / ZIP).</p>
 
       <div class="grid3">
         <div class="card">
@@ -137,66 +201,42 @@
         <a class="btn" href="assets/export-pdf-logi.pdf" target="_blank" rel="noopener">Abrir ejemplo PDF</a>
         <a class="btn ghost" href="tutoriales/index.html">Ver tutoriales</a>
       </div>
+      </div>
     </section>
 
-    <section class="section" data-theme="como">
-      <h2 class="h2">Cómo funciona</h2>
-      <p class="sectionSub">Tres pasos. El resultado queda listo para entregar (PDF / Word / ZIP).</p>
+    <section class="scene scene--tint section" id="funciones" data-scene="tint">
+      <div class="wrap">
+        <h2 class="h2">Funciones</h2>
+        <p class="sectionSub">Minimal, rápido y enfocado: lo que sí se usa en campo.</p>
 
-      <div class="grid3">
-        <div class="card stepCard">
-          <h3>1) Captura</h3>
-          <p>Foto + descripción en segundos, pensado para obra.</p>
-          <div class="stepMedia">
-            <img class="shot" src="assets/step-captura.jpg" alt="Captura: pantalla de Logi" />
-          </div>
-        </div>
-        <div class="card stepCard">
-          <h3>2) Organiza</h3>
-          <p>Galería por día e ítems. Encuentras todo sin buscar de más.</p>
-          <div class="stepMedia">
-            <img class="shot" src="assets/step-organiza.jpg" alt="Organización: filtros por día e ítem en Logi" />
-          </div>
-        </div>
-        <div class="card stepCard">
-          <h3>3) Exporta</h3>
-          <p>Un toque y queda listo: PDF / Word / ZIP por día o rango.</p>
-          <div class="stepMedia">
-            <img class="shot" src="assets/step-exporta.jpg" alt="Exporta: formato y botón de exportar" />
-          </div>
+        <div class="features">
+          <a class="feature" href="tutoriales/crear-proyecto.html"><b>Proyectos</b><span>Separación clara por obra/cliente.</span></a>
+          <a class="feature" href="tutoriales/items.html"><b>Ítems por proyecto</b><span>Clasificación ordenada para reportes.</span></a>
+          <a class="feature" href="tutoriales/galeria.html"><b>Galería por día</b><span>Revisión rápida y control de “listo”.</span></a>
+          <a class="feature" href="tutoriales/exportar.html"><b>Export PDF/DOCX/ZIP</b><span>Salida profesional en minutos.</span></a>
+          <a class="feature" href="tutoriales/plantillas.html"><b>Plantillas</b><span>Tu formato, tu membrete, tu estilo.</span></a>
+          <a class="feature" href="tutoriales/backup-restore.html"><b>Backup/restore</b><span>Seguridad por proyecto (sin dramas).</span></a>
         </div>
       </div>
     </section>
 
-    <section class="section" id="funciones" data-theme="funciones">
-      <h2 class="h2">Funciones</h2>
-      <p class="sectionSub">Minimal, rápido y enfocado: lo que sí se usa en campo.</p>
-
-      <div class="features">
-        <a class="feature" href="tutoriales/crear-proyecto.html"><b>Proyectos</b><span>Separación clara por obra/cliente.</span></a>
-        <a class="feature" href="tutoriales/items.html"><b>Ítems por proyecto</b><span>Clasificación ordenada para reportes.</span></a>
-        <a class="feature" href="tutoriales/galeria.html"><b>Galería por día</b><span>Revisión rápida y control de “listo”.</span></a>
-        <a class="feature" href="tutoriales/exportar.html"><b>Export PDF/DOCX/ZIP</b><span>Salida profesional en minutos.</span></a>
-        <a class="feature" href="tutoriales/plantillas.html"><b>Plantillas</b><span>Tu formato, tu membrete, tu estilo.</span></a>
-        <a class="feature" href="tutoriales/backup-restore.html"><b>Backup/restore</b><span>Seguridad por proyecto (sin dramas).</span></a>
-      </div>
-    </section>
-
-    <section class="section" data-theme="cta">
-      <div class="ctaBlock">
-        <div>
-          <h2 class="h2">¿Primera vez usando Logi?</h2>
-          <p class="sectionSub">Entra por una función y mira el paso a paso con imágenes (sin paja).</p>
+    <section class="scene scene--cta section" data-scene="cta">
+      <div class="wrap">
+        <div class="ctaBlock">
+          <div>
+            <h2 class="h2">¿Primera vez usando Logi?</h2>
+            <p class="sectionSub">Entra por una función y mira el paso a paso con imágenes (sin paja).</p>
+          </div>
+          <a class="btn primary" href="tutoriales/index.html">Ver todos los tutoriales</a>
         </div>
-        <a class="btn primary" href="tutoriales/index.html">Ver todos los tutoriales</a>
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="footerRow">
+    <footer class="footer scene scene--paper" data-scene="paper">
+      <div class="wrap footerRow">
         <div>
           <b>Logi</b>
-          <div class="muted">Bitácora fotográfica de obra · Offline-first · <span class="muted">Web v7.3</span></div>
+          <div class="muted">Bitácora fotográfica de obra · Offline-first · <span class="muted">Web v8.0</span></div>
         </div>
         <div class="footerActions">
           <button class="btn primary" data-open-install>Instalar Logi</button>
