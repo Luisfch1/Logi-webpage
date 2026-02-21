@@ -1,0 +1,141 @@
+/* --- Variables de Color Virgil --- */
+:root {
+  --fondo: #0a0e14;
+  --tarjeta: #161b22;
+  --verde-neon: #a1ff00;
+  --morado-neon: #ff00ff;
+  --texto-blanco: #ffffff;
+  --texto-gris: #8b949e;
+  --borde: rgba(255, 255, 255, 0.05);
+}
+
+/* --- Base --- */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--fondo);
+  color: var(--texto-blanco);
+  line-height: 1.6;
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* --- Encabezado --- */
+.top-nav {
+  position: fixed;
+  top: 0; width: 100%;
+  background: rgba(10, 14, 20, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  border-bottom: 1px solid var(--borde);
+  padding: 15px 0;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 38px;
+  border-radius: 8px;
+}
+
+.brand-logi {
+  color: var(--verde-neon);
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
+.brand-tag {
+  color: var(--texto-blanco);
+  font-weight: 400;
+  font-size: 1.4rem;
+}
+
+/* --- Botones --- */
+.btn {
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--verde-neon);
+  color: #000;
+  box-shadow: 0 0 15px rgba(161, 255, 0, 0.2);
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(161, 255, 0, 0.4);
+}
+
+/* --- Tarjetas (El efecto que te gusta) --- */
+.card {
+  background: var(--tarjeta);
+  border-radius: 20px;
+  padding: 30px;
+  border: 1px solid var(--borde);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: left;
+}
+
+.card:hover {
+  transform: translateY(-10px); /* Se levanta */
+  border-color: var(--morado-neon); /* Borde morado */
+  box-shadow: 0 10px 30px rgba(255, 0, 255, 0.15);
+}
+
+.card h3 {
+  color: var(--verde-neon);
+  margin-top: 0;
+}
+
+/* --- Sección de Capturas --- */
+.captura-img {
+  width: 100%;
+  border-radius: 15px;
+  border: 1px solid var(--borde);
+  transition: all 0.3s ease;
+}
+
+.captura-img:hover {
+  border-color: var(--morado-neon);
+}
+
+/* --- Modal QR --- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 2000;
+  align-items: center; justify-content: center;
+}
+
+.modal-content {
+  background: #fff;
+  color: #000;
+  padding: 35px;
+  border-radius: 30px;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+}
