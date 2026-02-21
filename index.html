@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logi - Bitácora Profesional</title>
+    <title>Logi - Reportes Fotográficos de Obra</title>
     
     <link rel="stylesheet" href="css/site.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/site.js"></script>
 
     <style>
-        /* --- ESTILOS BASE (MANTENIDOS ORIGINALES) --- */
+        /* --- ESTILOS BASE --- */
         .hero-title { font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 25px; color: white; }
         .gradient-accent { background: linear-gradient(90deg, #a1ff00 0%, #00ccff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
@@ -18,78 +18,35 @@
         .btn-glow:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(161, 255, 0, 0.5); }
         .btn-glow-blue { background: #00ccff; box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); }
 
-        /* --- SECCIÓN SCROLL HORIZONTAL (MEJORADA SEGÚN TUS PUNTOS) --- */
+        /* --- SECCIÓN SCROLL HORIZONTAL --- */
         .sticky-container { position: relative; height: 550vh; } 
-        
         .sticky-wrapper { 
-            position: sticky; 
-            top: 0; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            background: #050505; 
-            padding-top: 90px; /* Debajo de la bandita superior */
+            position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; 
+            overflow: hidden; background: #050505; padding-top: 90px; 
         }
+        .sticky-title-fixed { width: 100%; text-align: center; margin-bottom: 30px; }
+        .horizontal-scroll { display: flex; padding: 0 8vw; will-change: transform; align-items: center; height: 60vh; }
+        .carrusel-item { display: flex; align-items: center; gap: 30px; margin-right: 130px; flex-shrink: 0; position: relative; }
 
-        .sticky-title-fixed {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .horizontal-scroll { 
-            display: flex; 
-            padding: 0 8vw; 
-            will-change: transform; 
-            align-items: center;
-            height: 60vh;
-        }
-
-        .carrusel-item { 
-            display: flex;
-            align-items: center;
-            gap: 30px; 
-            margin-right: 130px; /* Espacio para ver 2 fotos simultáneas */
-            flex-shrink: 0; 
-            position: relative;
-        }
-
-        /* Badge minimalista: Círculo ajustado, solo borde verde */
         .step-badge {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            width: 32px;
-            height: 32px;
-            border: 2px solid var(--verde-neon);
-            color: var(--verde-neon);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 0.9rem;
-            background: rgba(0,0,0,0.9);
-            z-index: 10;
+            position: absolute; top: -10px; left: -10px; width: 32px; height: 32px;
+            border: 2px solid var(--verde-neon); color: var(--verde-neon); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 800;
+            font-size: 0.9rem; background: rgba(0,0,0,0.9); z-index: 10;
         }
 
-        .carrusel-item img { 
-            width: 260px; 
-            height: auto; 
-            max-height: 50vh; 
-            object-fit: contain; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-        }
-
-        .item-text { 
-            text-align: left;
-            max-width: 280px;
-        }
-        
+        .carrusel-item img { width: 260px; height: auto; max-height: 50vh; object-fit: contain; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .item-text { text-align: left; max-width: 280px; }
         .item-text h4 { color: var(--verde-neon); margin-bottom: 10px; font-size: 1.2rem; }
         .item-text p { color: var(--texto-gris); font-size: 0.95rem; line-height: 1.4; }
+
+        /* --- SECCIÓN RESULTADOS REALISTA --- */
+        .result-card {
+            background: rgba(255,255,255,0.03); padding: 40px; border-radius: 30px;
+            transition: all 0.3s ease; text-align: left; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; height: 100%;
+        }
+        .result-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.05); }
 
         .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
@@ -101,7 +58,7 @@
         <div class="wrap nav-content">
             <a href="#" class="brand">
                 <img src="assets/logo.png" alt="Logo Logi" style="height: 40px;">
-                <div><span class="brand-logi">Logi</span><span class="brand-tag">Bitácora Profesional</span></div>
+                <div><span class="brand-logi">Logi</span><span class="brand-tag">Reportes Fotográficos</span></div>
             </a>
             <button class="btn btn-primary" id="btnInstallNav">Instalar</button>
         </div>
@@ -110,9 +67,9 @@
     <main style="padding-top: 150px;">
         
         <section class="wrap" style="text-align: center; margin-bottom: 80px;">
-            <h1 class="hero-title">Reportes de obra <br><span class="gradient-accent">listos en segundos.</span></h1>
+            <h1 class="hero-title">Reportes fotográficos <br><span class="gradient-accent">listos en segundos.</span></h1>
             <p style="color: var(--texto-gris); font-size: 1.25rem; max-width: 600px; margin: 0 auto 45px; line-height: 1.5;">
-                La herramienta técnica para ingenieros que elimina el trabajo manual de oficina. Organiza, vincula y exporta desde el frente de obra.
+                La herramienta técnica para ingenieros que elimina el trabajo manual de oficina. Documentación fotográfica vinculada y organizada desde el frente de obra.
             </p>
             <button class="btn-glow" id="btnInstallHero">Comenzar ahora</button>
         </section>
@@ -127,61 +84,93 @@
                     <div class="carrusel-item">
                         <div class="step-badge">1</div>
                         <img src="assets/captura1.jpeg" alt="Proyectos">
-                        <div class="item-text"><h4>Proyectos</h4><p>Crea y organiza tus contratos o frentes de obra, de forma independiente, para un control total.</p></div>
+                        <div class="item-text"><h4>Proyectos</h4><p>Organiza tus contratos o frentes de obra de forma independiente para un control total.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">2</div>
                         <img src="assets/captura2.jpeg" alt="Gestión">
-                        <div class="item-text"><h4>Gestión</h4><p>Administra galerías independientes por cada proyecto o contrato activo.</p></div>
+                        <div class="item-text"><h4>Gestión</h4><p>Administra galerías de fotos independientes por cada contrato activo.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">3</div>
                         <img src="assets/captura3.jpeg" alt="Registro">
-                        <div class="item-text"><h4>Registro en Campo</h4><p>Toma fotos directamente o súbelas desde tu galería mientras estás en el frente de obra.</p></div>
+                        <div class="item-text"><h4>Registro en Campo</h4><p>Captura fotos directamente o súbelas desde tu galería en el frente de obra.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">4</div>
                         <img src="assets/captura4.jpeg" alt="Clasificación">
-                        <div class="item-text"><h4>Clasificación</h4><p>Vincula la foto al ítem del contrato correspondiente y añade descripciones técnicas al instante.</p></div>
+                        <div class="item-text"><h4>Clasificación</h4><p>Vincula cada foto al ítem correspondiente y añade descripciones técnicas al instante.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">5</div>
                         <img src="assets/captura5.jpeg" alt="Galería">
-                        <div class="item-text"><h4>Galería Inteligente</h4><p>Controla tus fotos por proyecto y realiza búsquedas rápidas filtrando por ítems específicos.</p></div>
+                        <div class="item-text"><h4>Galería Inteligente</h4><p>Filtra y busca fotos rápidamente por ítems específicos del proyecto.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">6</div>
                         <img src="assets/captura6.jpeg" alt="Periodo">
-                        <div class="item-text"><h4>Periodo de Reporte</h4><p>Selecciona el día, mes o rango de fechas exacto que necesitas documentar.</p></div>
+                        <div class="item-text"><h4>Periodo de Reporte</h4><p>Selecciona el rango de fechas exacto que necesitas documentar en tu informe.</p></div>
                     </div>
                     <div class="carrusel-item">
                         <div class="step-badge">7</div>
                         <img src="assets/captura7.jpeg" alt="Exportación">
-                        <div class="item-text"><h4>Exportación Versátil</h4><p>Obtén tus reportes finales en PDF, Word o respaldo ZIP, listos para enviar a interventoría.</p></div>
+                        <div class="item-text"><h4>Exportación Versátil</h4><p>Genera reportes técnicos en PDF o Word, listos para enviar o ajustar.</p></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <section class="wrap reveal" style="margin: 100px auto 150px; text-align: center;">
-            <h2 style="color: var(--morado-neon); margin-bottom: 60px;">Resultados de Ingeniería</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
-                <div class="card">
-                    <i data-lucide="file-text" style="color: var(--verde-neon); margin-bottom:15px;"></i>
-                    <h4>Reporte Estándar Logi</h4>
-                    <a href="assets/pdf formato logi.pdf" target="_blank" class="btn-glow" style="padding: 10px 25px; font-size: 0.9rem; text-decoration: none;">Ver ejemplo PDF</a>
+        <section class="wrap reveal" style="margin: 100px auto 150px;">
+            <div style="text-align: center; margin-bottom: 60px;">
+                <h2 style="color: var(--morado-neon); font-size: 2.5rem; margin-bottom: 20px;">Documentación Generada</h2>
+                <p style="color: var(--texto-gris); max-width: 700px; margin: 0 auto; font-size: 1.1rem;">
+                    Reportes fotográficos de alta precisión. La aplicación automatiza el volcado de datos para que tú solo te encargues de la revisión final.
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 80px; text-align: center;">
+                <div>
+                    <h3 style="color: var(--verde-neon); font-size: 2.2rem; margin-bottom: 5px;">-85%</h3>
+                    <p style="color: white; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Tiempo de Oficina</p>
                 </div>
-                <div class="card">
-                    <i data-lucide="layout" style="color: #00ccff; margin-bottom:15px;"></i>
-                    <h4>Formato Interventoría</h4>
-                    <a href="assets/Borrador formato usuario.pdf" target="_blank" class="btn-glow btn-glow-blue" style="padding: 10px 25px; font-size: 0.9rem; text-decoration: none;">Ver ejemplo Usuario</a>
+                <div>
+                    <h3 style="color: #00ccff; font-size: 2.2rem; margin-bottom: 5px;">PDF / Word</h3>
+                    <p style="color: white; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Formatos de Salida</p>
+                </div>
+                <div>
+                    <h3 style="color: var(--morado-neon); font-size: 2.2rem; margin-bottom: 5px;">ZIP</h3>
+                    <p style="color: white; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Respaldo de Evidencia</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px;">
+                <div class="result-card" style="border-left: 4px solid var(--verde-neon);">
+                    <div style="background: rgba(161, 255, 0, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i data-lucide="file-check" style="color: var(--verde-neon);"></i>
+                    </div>
+                    <h4 style="color: white; font-size: 1.4rem; margin-bottom: 12px;">Formato Estándar Logi</h4>
+                    <p style="color: var(--texto-gris); margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; flex-grow: 1;">
+                        Estructura técnica optimizada con georreferenciación y firmas. Disponible para exportación inmediata en PDF o Word editable.
+                    </p>
+                    <a href="assets/pdf formato logi.pdf" target="_blank" class="btn-glow" style="padding: 10px 25px; font-size: 0.85rem; text-decoration: none; width: fit-content;">Ver ejemplo PDF</a>
+                </div>
+
+                <div class="result-card" style="border-left: 4px solid #00ccff;">
+                    <div style="background: rgba(0, 204, 255, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i data-lucide="layout-template" style="color: #00ccff;"></i>
+                    </div>
+                    <h4 style="color: white; font-size: 1.4rem; margin-bottom: 12px;">Tus Propias Plantillas</h4>
+                    <p style="color: var(--texto-gris); margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; flex-grow: 1;">
+                        Sube el formato de tu proyecto. Logi rellena la información automáticamente y te entrega un archivo Word para tu control final.
+                    </p>
+                    <a href="assets/Borrador formato usuario.pdf" target="_blank" class="btn-glow btn-glow-blue" style="padding: 10px 25px; font-size: 0.85rem; text-decoration: none; width: fit-content;">Ver ejemplo Word</a>
                 </div>
             </div>
         </section>
     </main>
 
     <footer style="padding: 80px 0; text-align: center; color: var(--texto-gris); border-top: 1px solid var(--borde);">
-        <p>© 2026 Logi - Ingeniería de Software para Construcción Civil</p>
+        <p>© 2026 Logi - Software para Reportes Fotográficos de Construcción</p>
     </footer>
 
     <div class="modal-overlay" id="installOverlay">
@@ -196,17 +185,13 @@
 
     <script>
         lucide.createIcons();
-
-        /* Lógica de Scroll Horizontal */
         const stickyContainer = document.getElementById('stickyContainer');
         const horizontalScroll = document.getElementById('horizontalScroll');
-
         window.addEventListener('scroll', () => {
             const containerTop = stickyContainer.offsetTop;
             const containerHeight = stickyContainer.offsetHeight;
             const windowHeight = window.innerHeight;
             const scrollY = window.pageYOffset;
-
             if (scrollY >= containerTop && scrollY <= (containerTop + containerHeight - windowHeight)) {
                 const scrolledProgress = (scrollY - containerTop) / (containerHeight - windowHeight);
                 const totalWidth = horizontalScroll.scrollWidth;
@@ -215,8 +200,6 @@
                 horizontalScroll.style.transform = `translateX(-${scrolledProgress * movement}px)`;
             }
         });
-
-        /* Lógica de Revelado (Scroll Reveal) */
         function reveal() {
             var reveals = document.querySelectorAll(".reveal");
             for (var i = 0; i < reveals.length; i++) {
@@ -225,16 +208,11 @@
             }
         }
         window.addEventListener("scroll", reveal);
-        
-        /* Lógica de Botones - RESTAURADA ORIGINAL */
         window.addEventListener('load', () => {
             const btns = ['btnInstallNav', 'btnInstallHero'];
             btns.forEach(id => {
                 const b = document.getElementById(id);
-                if(b) b.onclick = (e) => { 
-                    e.preventDefault(); 
-                    if(window.openInstall) window.openInstall(); 
-                };
+                if(b) b.onclick = (e) => { e.preventDefault(); if(window.openInstall) window.openInstall(); };
             });
             const close = document.getElementById('installClose');
             if(close) close.onclick = () => window.closeInstall();
