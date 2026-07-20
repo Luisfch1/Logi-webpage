@@ -172,6 +172,28 @@ class StateManager {
         return proj;
     }
 
+    async updateProject(id, newName) {
+        const proj = this.projects.find(p => p.id === id);
+        if (!proj) return;
+        proj.name = newName.toUpperCase();
+        await LogiNative.dbPut('meta', proj);
+        if (this.currentProject && this.currentProject.id === id) {
+            this.currentProject.name = proj.name;
+        }
+        this.notify('projects');
+    }
+
+    async deleteProject(id) {
+        await LogiNative.dbDelete('meta', id);
+        this.projects = this.projects.filter(p => p.id !== id);
+        if (this.currentProject && this.currentProject.id === id) {
+            this.currentProject = this.projects[0] || null;
+            if (this.currentProject) localStorage.setItem('last_active_project_id', this.currentProject.id);
+        }
+        this.filterItems();
+        this.notify('projects');
+    }
+
     async addItem(data) {
         const cleanData = this._sanitize(data);
         if (!cleanData) return;
