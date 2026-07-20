@@ -1,8 +1,10 @@
 /**
  * ProjectsScreen.js — Logi Workspace (Desktop Suite)
- * Widescreen Project Management Workspace
+ * Widescreen Project Management Workspace with .logiproject file support
  */
 import { State } from '../../core/State.js';
+import { Architect } from '../../core/Architect.js';
+import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 
 export const ProjectsScreen = {
     getLayout() {
@@ -15,10 +17,14 @@ export const ProjectsScreen = {
                 <div class="flex justify-between items-center border-b border-white/10 pb-4">
                     <div>
                         <span class="text-[10px] font-bold font-headline uppercase tracking-widest text-primary">Gestión de Proyectos · PC Desktop</span>
-                        <h1 class="text-2xl font-bold font-headline text-white">Proyectos (${projects.length})</h1>
+                        <h1 class="text-2xl font-bold font-headline text-white">Proyectos en Workspace (${projects.length})</h1>
                     </div>
 
                     <div class="flex gap-3">
+                        <button id="btn-open-proj-file" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/10 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-sm">folder_open</span>
+                            <span>Abrir Archivo (.logiproject)</span>
+                        </button>
                         <input id="new-proj-name" type="text" placeholder="Nombre del nuevo proyecto..." class="bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-primary outline-none w-64" />
                         <button id="btn-create-proj" class="px-4 py-2 rounded-xl bg-primary text-black font-bold text-xs glow-border active:scale-95 transition-all">
                             + Crear Proyecto
@@ -74,6 +80,20 @@ export const ProjectsScreen = {
                 } else {
                     alert("Ingresa un nombre para el proyecto.");
                 }
+            };
+        }
+
+        const btnOpenFile = document.getElementById('btn-open-proj-file');
+        if (btnOpenFile) {
+            btnOpenFile.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.logiproject, .zip';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) ProjectFileManager.importLogiProject(file);
+                };
+                input.click();
             };
         }
 
