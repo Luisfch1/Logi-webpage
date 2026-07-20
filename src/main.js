@@ -1,25 +1,48 @@
 /**
- * main.js
- * Logi Workspace (Desktop Suite) Entry Point
+ * main.js — Logi Workspace (Desktop Suite v1.0)
+ * Desktop Widescreen Workspace Entry Point
  */
 import './style.css';
 import { Architect } from './core/Architect.js';
 import { State } from './core/State.js';
+import { LogiNative } from './core/LogiNative.js';
 import { SidebarNav } from './screens/sidebar/SidebarNav.js';
 import { DesignerScreen } from './screens/designer/DesignerScreen.js';
+import { CaptureScreen } from './screens/capture/CaptureScreen.js';
+import { GalleryScreen } from './screens/gallery/GalleryScreen.js';
+import { ProjectsScreen } from './screens/projects/ProjectsScreen.js';
+import { ExportScreen } from './screens/export/ExportScreen.js';
+import { SettingsScreen } from './screens/settings/SettingsScreen.js';
 
-// Registrar pantallas
+// Registrar Pantallas de Escritorio
 Architect.register('designer', DesignerScreen);
+Architect.register('capture', CaptureScreen);
+Architect.register('gallery', GalleryScreen);
+Architect.register('projects', ProjectsScreen);
+Architect.register('export', ExportScreen);
+Architect.register('settings', SettingsScreen);
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('>>> LOGI WORKSPACE INICIALIZADO (DESKTOP SUITE) <<<');
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('>>> LOGI WORKSPACE (DESKTOP SUITE) INICIALIZADO <<<');
 
-    // Renderizar Sidebar panorámico
-    const sidebar = document.getElementById('sidebar-nav');
-    if (sidebar) {
-        sidebar.innerHTML = SidebarNav.render();
-    }
+    await LogiNative.init();
+    await State.loadFromDisk();
 
-    // Renderizar pantalla principal inicial (Diseñador .logifmt)
-    Architect.render('designer');
+    const renderSidebar = () => {
+        const sidebar = document.getElementById('sidebar-nav');
+        if (sidebar) {
+            sidebar.innerHTML = SidebarNav.render();
+            SidebarNav.bindEvents();
+        }
+    };
+
+    renderSidebar();
+    Architect.render(State.currentTab || 'designer');
+
+    State.subscribe((state, changeType) => {
+        if (changeType === 'tab') {
+            renderSidebar();
+            Architect.render(state.currentTab);
+        }
+    });
 });

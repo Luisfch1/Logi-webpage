@@ -1,9 +1,24 @@
 /**
- * SidebarNav.js
- * Barra de Navegación Lateral Fija Panorámica para Logi Workspace (Desktop)
+ * SidebarNav.js — Logi Workspace (Desktop Suite)
+ * Panorámica Fija de Escritorio con todos los módulos adaptados
  */
+import { State } from '../../core/State.js';
+import { Architect } from '../../core/Architect.js';
+
 export const SidebarNav = {
     render() {
+        const activeTab = State.currentTab;
+
+        const navItem = (id, icon, label) => {
+            const isActive = activeTab === id;
+            return `
+                <button id="nav-${id}" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${isActive ? 'text-black bg-primary glow-border' : 'text-white/60 hover:text-white hover:bg-white/5'}" data-tab="${id}">
+                    <span class="material-symbols-outlined text-lg">${icon}</span>
+                    <span>${label}</span>
+                </button>
+            `;
+        };
+
         return `
             <div class="flex flex-col h-full justify-between">
                 <!-- Marca & Header -->
@@ -18,27 +33,14 @@ export const SidebarNav = {
                         </div>
                     </div>
 
-                    <!-- Menú de Navegación Panorámico -->
+                    <!-- Menú de Navegación Panorámico de Escritorio -->
                     <nav class="space-y-1.5">
-                        <button id="nav-designer" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-black bg-primary glow-border">
-                            <span class="material-symbols-outlined text-lg">design_services</span>
-                            <span>Diseñador .logifmt</span>
-                        </button>
-
-                        <button id="nav-projects" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                            <span class="material-symbols-outlined text-lg">folder_open</span>
-                            <span>Gestión de Proyectos</span>
-                        </button>
-
-                        <button id="nav-templates" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                            <span class="material-symbols-outlined text-lg">grid_view</span>
-                            <span>Catálogo de Plantillas</span>
-                        </button>
-
-                        <button id="nav-reports" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                            <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
-                            <span>Renderizador PDF / Excel</span>
-                        </button>
+                        ${navItem('designer', 'design_services', 'Diseñador .logifmt')}
+                        ${navItem('capture', 'photo_camera', 'Captura de Evidencias')}
+                        ${navItem('gallery', 'photo_library', 'Galería Panorámica')}
+                        ${navItem('projects', 'folder_open', 'Gestión de Proyectos')}
+                        ${navItem('export', 'output', 'Exportar PDF / Excel')}
+                        ${navItem('settings', 'settings', 'Configuración')}
                     </nav>
                 </div>
 
@@ -47,16 +49,25 @@ export const SidebarNav = {
                     <div class="p-3 bg-white/5 rounded-xl flex items-center justify-between border border-white/5">
                         <div class="flex items-center gap-2.5 overflow-hidden">
                             <div class="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs">
-                                JS
+                                LOGI
                             </div>
                             <div class="truncate">
-                                <p class="text-[11px] font-bold text-white truncate">Inspector Pro</p>
-                                <p class="text-[9px] text-white/40 font-mono">Modo Offline / Local</p>
+                                <p class="text-[11px] font-bold text-white truncate">Estación de Trabajo</p>
+                                <p class="text-[9px] text-white/40 font-mono">PC Desktop Suite</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    bindEvents() {
+        document.querySelectorAll('aside button[data-tab]').forEach(btn => {
+            btn.onclick = () => {
+                const tab = btn.dataset.tab;
+                State.setTab(tab);
+            };
+        });
     }
 };
