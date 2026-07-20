@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+    --primary: #cafd00;
+    --primary-glow: rgba(202, 253, 0, 0.4);
+    --primary-border: rgba(202, 253, 0, 0.2);
+    
+    --bg-main: #050505;
+    --surface-glass: rgba(15, 15, 18, 0.75);
+    --surface-card: #0f0f12;
+    --text-primary: #f6f2fa;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-headline {
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.glass-card {
+    background: var(--surface-glass);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+}
+
+.glow-border {
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* Scrollbar Estilizado */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
