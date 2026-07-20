@@ -35,12 +35,12 @@ export const SidebarNav = {
 
                     <!-- Menú de Navegación Panorámico de Escritorio -->
                     <nav class="space-y-1.5">
-                        ${navItem('designer', 'design_services', 'Diseñador .logifmt')}
                         ${navItem('capture', 'photo_camera', 'Captura de Evidencias')}
                         ${navItem('gallery', 'photo_library', 'Galería Panorámica')}
                         ${navItem('projects', 'folder_open', 'Gestión de Proyectos')}
                         ${navItem('export', 'output', 'Exportar PDF / Excel')}
                         ${navItem('settings', 'settings', 'Configuración')}
+                        ${navItem('designer', 'design_services', 'Diseñador .logifmt')}
                     </nav>
                 </div>
 
