@@ -97,6 +97,28 @@ export const LogiNative = {
         });
     },
 
+    deleteBlob: async (filename) => {
+        const db = await getDB();
+        if (!db) return false;
+        return new Promise(r => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+
+            const cleanName = String(filename).trim();
+            const noExt = cleanName.replace(/\.jpg$/i, '');
+            const noCap = cleanName.replace(/^cap_/, '');
+            const rawId = noCap.replace(/\.jpg$/i, '');
+
+            store.delete(cleanName);
+            if (noExt !== cleanName) store.delete(noExt);
+            if (noCap !== cleanName) store.delete(noCap);
+            if (rawId !== cleanName) store.delete(`${rawId}.jpg`);
+
+            tx.oncomplete = () => r(true);
+            tx.onerror = () => r(false);
+        });
+    },
+
     getBlobUri: async (filename) => {
         if (!filename) return null;
         const db = await getDB();
