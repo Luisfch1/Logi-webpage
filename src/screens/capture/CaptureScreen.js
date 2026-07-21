@@ -1,6 +1,6 @@
 /**
  * CaptureScreen.js — Logi Workspace (Desktop Suite)
- * Widescreen Photo Capture Studio with Direct Card Editing & Project File Management
+ * Widescreen Photo Capture Studio with Batch Selection, Compact Grid & Direct Action Overlays
  */
 import { State } from '../../core/State.js';
 import { LogiNative } from '../../core/LogiNative.js';
@@ -8,6 +8,8 @@ import { ImageCompressor } from '../../utils/ImageCompressor.js';
 import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 
 export const CaptureScreen = {
+    selectedIds: [],
+
     getLayout() {
         const projName = State.currentProject?.name || 'SELECCIONAR PROYECTO';
         const catalog = State.catalog || [];
@@ -22,26 +24,36 @@ export const CaptureScreen = {
                     </div>
                     
                     <div class="flex gap-3">
-                        <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all">
+                        <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-base">upload_file</span>
                             <span>Cargar Fotos de Galería</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Formulario de Control Rápido -->
-                <div class="grid grid-cols-3 gap-6 bg-[#0a0a0c] p-5 rounded-2xl border border-white/10">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Ítem Predeterminado para Nuevas Capturas</label>
+                <!-- Panel de Control y Edición en Lote -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-[#0a0a0c] p-5 rounded-2xl border border-white/10 items-end">
+                    <div class="lg:col-span-3">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Ítem / Actividad</label>
                         <select id="desktop-select-item" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-primary outline-none">
                             <option value="GENERAL">GENERAL (Sin ítem específico)</option>
                             ${catalog.map(c => `<option value="${c.item}">${c.item} - ${c.descripcion}</option>`).join('')}
                         </select>
                     </div>
 
-                    <div class="col-span-2">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Descripción Predeterminada</label>
-                        <input id="desktop-input-desc" type="text" placeholder="Escribe un comentario por defecto (opcional)..." class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-primary outline-none" />
+                    <div class="lg:col-span-5">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Descripción Técnica</label>
+                        <input id="desktop-input-desc" type="text" placeholder="Escribe un comentario o descripción técnica..." class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-primary outline-none" />
+                    </div>
+
+                    <div class="lg:col-span-4 flex gap-2">
+                        <button id="btn-apply-batch" class="flex-1 px-3.5 py-2.5 rounded-xl text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-not-allowed opacity-50" disabled>
+                            <span class="material-symbols-outlined text-sm font-bold">check_circle</span>
+                            <span id="txt-apply-batch">Aplicar a Seleccionadas (0)</span>
+                        </button>
+                        <button id="btn-delete-batch" class="px-3.5 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/20 transition-all cursor-not-allowed opacity-0" disabled>
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
                     </div>
                 </div>
 
@@ -56,7 +68,7 @@ export const CaptureScreen = {
             <!-- MODAL DE ZOOM DE FOTO -->
             <div id="photo-zoom-modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
                 <div class="max-w-5xl max-h-[90vh] bg-[#0a0a0c] border border-white/10 rounded-3xl p-4 flex flex-col items-center space-y-3 relative shadow-2xl">
-                    <button id="btn-close-zoom-modal" class="absolute top-4 right-4 text-white/60 hover:text-white bg-black/60 p-2 rounded-full border border-white/10">
+                    <button id="btn-close-zoom-modal" class="absolute top-4 right-4 text-white/60 hover:text-white bg-black/60 p-2 rounded-full border border-white/10 cursor-pointer">
                         <span class="material-symbols-outlined text-xl">close</span>
                     </button>
                     <img id="zoom-modal-img" class="max-h-[75vh] max-w-full rounded-2xl object-contain border border-white/10" src="" alt="Vista Previa" />
@@ -67,11 +79,13 @@ export const CaptureScreen = {
     },
 
     init() {
+        this.selectedIds = [];
         this.bindEvents();
         this.renderGrid();
 
         State.subscribe((state, changeType) => {
             if (changeType === 'items' || changeType === 'project') {
+                this.selectedIds = [];
                 this.renderGrid();
             }
         });
@@ -87,6 +101,49 @@ export const CaptureScreen = {
         const zoomModal = document.getElementById('photo-zoom-modal');
         if (btnCloseZoom && zoomModal) {
             btnCloseZoom.onclick = () => zoomModal.classList.add('hidden');
+        }
+
+        const btnApplyBatch = document.getElementById('btn-apply-batch');
+        if (btnApplyBatch) {
+            btnApplyBatch.onclick = async () => {
+                const itemSelect = document.getElementById('desktop-select-item');
+                const descInput = document.getElementById('desktop-input-desc');
+
+                const activity = itemSelect ? itemSelect.value : 'GENERAL';
+                const description = descInput ? descInput.value.trim() : '';
+
+                if (this.selectedIds.length === 0) return;
+
+                // Actualizar elementos en el Estado
+                for (const id of this.selectedIds) {
+                    await State.updateItem(id, { actividad: activity, descripcion: description });
+                }
+
+                // Limpiar selección y campos
+                this.selectedIds = [];
+                if (descInput) descInput.value = '';
+                this.renderGrid();
+            };
+        }
+
+        const btnDeleteBatch = document.getElementById('btn-delete-batch');
+        if (btnDeleteBatch) {
+            btnDeleteBatch.onclick = async () => {
+                const count = this.selectedIds.length;
+                if (count === 0) return;
+
+                if (confirm(`¿Estás seguro de eliminar las ${count} evidencias seleccionadas del disco?`)) {
+                    const idsToDelete = [...this.selectedIds];
+                    this.selectedIds = [];
+
+                    for (const id of idsToDelete) {
+                        const item = State.items.find(i => i.id === id);
+                        if (item) {
+                            await State.deleteItem(id, item.filename);
+                        }
+                    }
+                }
+            };
         }
     },
 
@@ -106,9 +163,7 @@ export const CaptureScreen = {
 
             for (const file of files) {
                 try {
-                    // Extraer fecha nativa del archivo EXIF / lastModified
                     const photoTimestamp = file.lastModified || Date.now();
-
                     const compressed = await ImageCompressor.compress(file, 1400, 0.75);
                     if (compressed.base64) {
                         const id = 'cap_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -138,12 +193,40 @@ export const CaptureScreen = {
         input.click();
     },
 
+    updateBatchPanel() {
+        const btnApply = document.getElementById('btn-apply-batch');
+        const txtApply = document.getElementById('txt-apply-batch');
+        const btnDelete = document.getElementById('btn-delete-batch');
+
+        if (!btnApply) return;
+
+        const count = this.selectedIds.length;
+        if (count > 0) {
+            btnApply.disabled = false;
+            btnApply.className = "flex-1 px-3.5 py-2.5 rounded-xl text-black bg-primary font-black text-xs flex items-center justify-center gap-2 transition-all glow-border cursor-pointer";
+            if (txtApply) txtApply.textContent = `Aplicar a Seleccionadas (${count})`;
+
+            if (btnDelete) {
+                btnDelete.disabled = false;
+                btnDelete.className = "px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/30 transition-all cursor-pointer opacity-100";
+            }
+        } else {
+            btnApply.disabled = true;
+            btnApply.className = "flex-1 px-3.5 py-2.5 rounded-xl text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-not-allowed opacity-50";
+            if (txtApply) txtApply.textContent = "Aplicar a Seleccionadas (0)";
+
+            if (btnDelete) {
+                btnDelete.disabled = true;
+                btnDelete.className = "px-3.5 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/20 transition-all cursor-not-allowed opacity-0";
+            }
+        }
+    },
+
     async renderGrid() {
         const container = document.getElementById('desktop-capture-groups');
         if (!container) return;
 
         const items = State.items;
-        const catalog = State.catalog || [];
 
         if (items.length === 0) {
             container.innerHTML = `
@@ -153,6 +236,7 @@ export const CaptureScreen = {
                     <p class="text-xs text-white/40 max-w-md mx-auto">Usa el botón "Cargar Fotos de Galería" para agregar fotos. Se organizarán automáticamente por la fecha en que fueron tomadas.</p>
                 </div>
             `;
+            this.updateBatchPanel();
             return;
         }
 
@@ -169,113 +253,168 @@ export const CaptureScreen = {
         container.innerHTML = sortedGroupKeys.map(dateKey => {
             const groupItems = groups[dateKey];
             return `
-                <div class="space-y-3">
-                    <!-- Encabezado de la Carpeta/Día -->
-                    <div class="flex items-center gap-3 border-b border-white/10 pb-2">
-                        <span class="material-symbols-outlined text-primary text-lg">calendar_today</span>
-                        <h3 class="font-headline font-bold text-sm text-white tracking-wide">${dateKey}</h3>
-                        <span class="text-[10px] font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">${groupItems.length} Evidencias</span>
+                <div class="space-y-4">
+                    <!-- Encabezado de Fecha con Selección Grupal -->
+                    <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-lg">calendar_today</span>
+                            <h3 class="font-headline font-bold text-sm text-white tracking-wide">${dateKey}</h3>
+                            <span class="text-[10px] font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">${groupItems.length} Evidencias</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-[10px] font-mono">
+                            <button class="btn-select-group-all text-primary hover:underline cursor-pointer" data-date="${dateKey}">Seleccionar Todas</button>
+                            <span class="text-white/20">|</span>
+                            <button class="btn-deselect-group-all text-white/40 hover:text-white hover:underline cursor-pointer" data-date="${dateKey}">Deseleccionar</button>
+                        </div>
                     </div>
 
-                    <!-- Cuadrícula de Tarjetas Editables -->
-                    <div class="grid grid-cols-3 gap-5">
-                        ${groupItems.map(it => `
-                            <div class="bg-[#0a0a0c] border border-white/10 rounded-2xl p-4 space-y-3 group hover:border-primary/40 transition-all flex flex-col justify-between">
-                                <div class="space-y-3">
-                                    <!-- Foto con Botón de Zoom -->
-                                    <div class="w-full h-48 bg-black rounded-xl overflow-hidden relative border border-white/5 group-hover:shadow-lg transition-all cursor-pointer btn-zoom-photo" data-id="${it.id}">
-                                        <img id="img-${it.id}" class="w-full h-full object-cover" src="${it._tempImageSrc || ''}" alt="Evidencia" />
-                                        <span class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[9px] font-mono text-white/70">${it.timeStr || ''}</span>
-                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-white gap-2 font-bold text-xs">
-                                            <span class="material-symbols-outlined text-xl">zoom_in</span>
-                                            <span>Ampliar Foto</span>
+                    <!-- Cuadrícula Compacta Horizontal (Relación de Aspecto 16:9) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        ${groupItems.map(it => {
+                            const isSelected = this.selectedIds.includes(it.id);
+                            return `
+                                <div class="relative aspect-video bg-[#0a0a0c] border border-white/10 rounded-xl overflow-hidden group cursor-pointer transition-all hover:border-primary/50 btn-select-card ${isSelected ? 'ring-2 ring-primary border-primary' : ''}" data-id="${it.id}">
+                                    <!-- Imagen -->
+                                    <img id="img-${it.id}" class="w-full h-full object-cover select-none pointer-events-none" src="${it._tempImageSrc || ''}" alt="Evidencia" />
+
+                                    <!-- Degradado Base y Detalles -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-between p-3 select-none pointer-events-none z-10">
+                                        <!-- Barra Superior: Check y Acciones Hover -->
+                                        <div class="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-all pointer-events-auto">
+                                            <span class="check-icon material-symbols-outlined text-sm bg-black/60 p-1 rounded-full border border-white/10 ${isSelected ? 'text-primary font-bold' : 'text-white/60'}">
+                                                ${isSelected ? 'check_circle' : 'radio_button_unchecked'}
+                                            </span>
+                                            
+                                            <div class="flex gap-1 bg-black/75 p-0.5 rounded-lg border border-white/10">
+                                                <button class="btn-zoom-single-photo p-1 text-white/70 hover:text-white rounded hover:bg-white/10 transition-all cursor-pointer" data-id="${it.id}" title="Ampliar Imagen">
+                                                    <span class="material-symbols-outlined text-[15px]">zoom_in</span>
+                                                </button>
+                                                <button class="btn-delete-single-photo p-1 text-white/70 hover:text-rose-400 rounded hover:bg-white/10 transition-all cursor-pointer" data-id="${it.id}" data-file="${it.filename}" title="Eliminar Foto">
+                                                    <span class="material-symbols-outlined text-[15px]">delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Detalles Inferiores -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between items-end gap-2">
+                                                <span class="text-[9px] font-mono font-bold bg-primary/20 text-primary border border-primary/20 px-1.5 py-0.5 rounded truncate max-w-[80px]">${it.actividad || 'GENERAL'}</span>
+                                                <span class="text-[8px] font-mono text-white/50">${it.timeStr || ''}</span>
+                                            </div>
+                                            ${it.descripcion ? `
+                                                <p class="text-[10px] text-white/90 truncate leading-tight font-body">${it.descripcion}</p>
+                                            ` : `
+                                                <p class="text-[10px] text-white/30 italic truncate leading-tight font-body">Sin descripción</p>
+                                            `}
                                         </div>
                                     </div>
 
-                                    <!-- Campo Editable: Descripción Directa -->
-                                    <div>
-                                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/50 block mb-1">Descripción Técnica</label>
-                                        <input type="text" data-id="${it.id}" class="input-card-desc w-full bg-black/50 border border-white/10 focus:border-primary rounded-xl px-3 py-2 text-xs text-white outline-none transition-all" value="${it.descripcion || ''}" placeholder="Escribe la descripción..." />
-                                    </div>
-
-                                    <!-- Campo Editable: Selector de Ítem / Actividad -->
-                                    <div>
-                                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/50 block mb-1">Ítem / Actividad Asignada</label>
-                                        <select data-id="${it.id}" class="select-card-act w-full bg-black/50 border border-white/10 focus:border-primary rounded-xl px-3 py-2 text-xs text-white outline-none transition-all">
-                                            <option value="GENERAL" ${it.actividad === 'GENERAL' ? 'selected' : ''}>GENERAL</option>
-                                            ${catalog.map(c => `<option value="${c.item}" ${it.actividad === c.item ? 'selected' : ''}>${c.item} - ${c.descripcion}</option>`).join('')}
-                                        </select>
+                                    <!-- Indicador Visual Checkmark Flotante -->
+                                    <div class="selected-badge absolute top-2 left-2 bg-primary text-black rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-black/40 z-20 ${isSelected ? '' : 'hidden'}">
+                                        <span class="material-symbols-outlined text-[13px] font-bold">check</span>
                                     </div>
                                 </div>
-
-                                <!-- Footer Tarjeta con Estado e Indicadores -->
-                                <div class="flex items-center justify-between pt-2 border-t border-white/5 text-[9px] font-mono text-white/40">
-                                    <span id="save-status-${it.id}" class="text-emerald-400 font-bold hidden">Guardado ✓</span>
-                                    <button class="btn-delete-card-photo text-rose-400 hover:text-rose-300 font-bold hover:underline transition-all" data-id="${it.id}" data-file="${it.filename}">
-                                        Eliminar
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
         }).join('');
 
-        // Vincular Eventos de Edición Instantánea en Tarjetas
-        container.querySelectorAll('.input-card-desc').forEach(input => {
-            input.oninput = (e) => {
-                const id = input.dataset.id;
-                const val = e.target.value;
-                State.updateItem(id, { descripcion: val });
-                const statusSpan = document.getElementById(`save-status-${id}`);
-                if (statusSpan) {
-                    statusSpan.classList.remove('hidden');
-                    setTimeout(() => statusSpan.classList.add('hidden'), 1500);
+        // 1. Vincular Clic en Tarjeta para Selección
+        container.querySelectorAll('.btn-select-card').forEach(card => {
+            card.onclick = (e) => {
+                if (e.target.closest('.btn-zoom-single-photo') || e.target.closest('.btn-delete-single-photo')) {
+                    return;
                 }
+
+                const id = card.dataset.id;
+                const idx = this.selectedIds.indexOf(id);
+                if (idx === -1) {
+                    this.selectedIds.push(id);
+                    card.classList.add('ring-2', 'ring-primary', 'border-primary');
+                    const badge = card.querySelector('.selected-badge');
+                    if (badge) badge.classList.remove('hidden');
+                    const icon = card.querySelector('.check-icon');
+                    if (icon) {
+                        icon.textContent = 'check_circle';
+                        icon.classList.remove('text-white/60');
+                        icon.classList.add('text-primary', 'font-bold');
+                    }
+                } else {
+                    this.selectedIds.splice(idx, 1);
+                    card.classList.remove('ring-2', 'ring-primary', 'border-primary');
+                    const badge = card.querySelector('.selected-badge');
+                    if (badge) badge.classList.add('hidden');
+                    const icon = card.querySelector('.check-icon');
+                    if (icon) {
+                        icon.textContent = 'radio_button_unchecked';
+                        icon.classList.remove('text-primary', 'font-bold');
+                        icon.classList.add('text-white/60');
+                    }
+                }
+                this.updateBatchPanel();
             };
         });
 
-        container.querySelectorAll('.select-card-act').forEach(select => {
-            select.onchange = (e) => {
-                const id = select.dataset.id;
-                const val = e.target.value;
-                State.updateItem(id, { actividad: val });
-                const statusSpan = document.getElementById(`save-status-${id}`);
-                if (statusSpan) {
-                    statusSpan.classList.remove('hidden');
-                    setTimeout(() => statusSpan.classList.add('hidden'), 1500);
-                }
-            };
-        });
-
-        container.querySelectorAll('.btn-delete-card-photo').forEach(btn => {
+        // 2. Vincular Ampliación de Foto Individual
+        container.querySelectorAll('.btn-zoom-single-photo').forEach(btn => {
             btn.onclick = async () => {
-                if (confirm("¿Estás seguro de eliminar esta evidencia?")) {
-                    await State.deleteItem(btn.dataset.id, btn.dataset.file);
-                }
-            };
-        });
-
-        // Modal Zoom Foto
-        const zoomModal = document.getElementById('photo-zoom-modal');
-        const zoomImg = document.getElementById('zoom-modal-img');
-        const zoomCaption = document.getElementById('zoom-modal-caption');
-
-        container.querySelectorAll('.btn-zoom-photo').forEach(div => {
-            div.onclick = async () => {
-                const id = div.dataset.id;
+                const id = btn.dataset.id;
                 const item = State.items.find(i => i.id === id);
+                const zoomModal = document.getElementById('photo-zoom-modal');
+                const zoomImg = document.getElementById('zoom-modal-img');
+                const zoomCaption = document.getElementById('zoom-modal-caption');
+
                 if (item && zoomModal && zoomImg) {
                     const src = item._tempImageSrc || await LogiNative.getBlobUri(item.filename);
                     zoomImg.src = src;
-                    if (zoomCaption) zoomCaption.textContent = `${item.actividad} · ${item.descripcion || 'Sin Descripción'}`;
+                    if (zoomCaption) {
+                        zoomCaption.textContent = `${item.actividad || 'GENERAL'} · ${item.descripcion || 'Sin Descripción'}`;
+                    }
                     zoomModal.classList.remove('hidden');
                 }
             };
         });
 
-        // Cargar miniaturas dinámicamente si falta `_tempImageSrc`
+        // 3. Vincular Eliminación de Foto Individual
+        container.querySelectorAll('.btn-delete-single-photo').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                const filename = btn.dataset.file;
+                if (confirm("¿Estás seguro de eliminar esta evidencia del disco?")) {
+                    // Remover de la selección si estaba marcado
+                    this.selectedIds = this.selectedIds.filter(i => i !== id);
+                    await State.deleteItem(id, filename);
+                }
+            };
+        });
+
+        // 4. Vincular Botones de Selección Colectiva por Día
+        container.querySelectorAll('.btn-select-group-all').forEach(btn => {
+            btn.onclick = () => {
+                const dateKey = btn.dataset.date;
+                const groupItems = groups[dateKey] || [];
+                groupItems.forEach(it => {
+                    if (!this.selectedIds.includes(it.id)) {
+                        this.selectedIds.push(it.id);
+                    }
+                });
+                this.renderGrid();
+            };
+        });
+
+        container.querySelectorAll('.btn-deselect-group-all').forEach(btn => {
+            btn.onclick = () => {
+                const dateKey = btn.dataset.date;
+                const groupItems = groups[dateKey] || [];
+                const ids = groupItems.map(it => it.id);
+                this.selectedIds = this.selectedIds.filter(id => !ids.includes(id));
+                this.renderGrid();
+            };
+        });
+
+        // 5. Cargar Miniaturas Asincrónicas de IndexedDB
         items.forEach(async (it) => {
             if (!it._tempImageSrc) {
                 const uri = await LogiNative.getBlobUri(it.filename);
@@ -286,5 +425,8 @@ export const CaptureScreen = {
                 }
             }
         });
+
+        // Actualizar el panel en base a la selección actual
+        this.updateBatchPanel();
     }
 };
