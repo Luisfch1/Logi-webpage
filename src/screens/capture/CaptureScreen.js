@@ -157,6 +157,34 @@ export const CaptureScreen = {
                 }
             };
         }
+
+        // Clic fuera de las fotos deselecciona todo
+        document.addEventListener('click', (e) => {
+            // Solo actuar si estamos en la vista de captura
+            const captureView = document.getElementById('desktop-capture-groups');
+            if (!captureView) return;
+
+            // Verificar si hay elementos seleccionados
+            if (this.selectedIds.length === 0) return;
+
+            // Verificar si el clic fue en un elemento interactivo que debe mantener la selección
+            const isInsideCard = e.target.closest('.btn-select-card');
+            const isInsideBatchControls = e.target.closest('#btn-apply-batch') || 
+                                          e.target.closest('#btn-delete-batch') || 
+                                          e.target.closest('#desktop-select-item') || 
+                                          e.target.closest('#desktop-input-desc') || 
+                                          e.target.closest('#desktop-input-date');
+            const isInsideHeaderControls = e.target.closest('.btn-select-group-all') || 
+                                           e.target.closest('.btn-deselect-group-all') || 
+                                           e.target.closest('#btn-desktop-upload');
+            const isInsideModal = e.target.closest('#photo-zoom-modal');
+
+            if (!isInsideCard && !isInsideBatchControls && !isInsideHeaderControls && !isInsideModal) {
+                // Deseleccionar todas
+                this.selectedIds = [];
+                this.renderGrid();
+            }
+        });
     },
 
     pickFilesFromPC() {
