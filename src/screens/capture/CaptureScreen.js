@@ -28,7 +28,10 @@ export const CaptureScreen = {
                         <!-- Buscador Compacto de Evidencias -->
                         <div class="relative w-64">
                             <span class="material-symbols-outlined absolute left-3 top-2.5 text-white/30 text-base">search</span>
-                            <input id="capture-search-input" type="text" placeholder="Buscar por ítem o descripción..." class="w-full bg-black/60 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:border-primary/50 outline-none" />
+                            <input id="capture-search-input" type="text" placeholder="Buscar por ítem o descripción..." class="w-full bg-black/60 border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white focus:border-primary/50 outline-none" />
+                            <button id="btn-clear-search" class="absolute right-3 top-2 flex items-center justify-center text-white/40 hover:text-white transition-all cursor-pointer p-0.5 rounded-full hover:bg-white/5 hidden" title="Limpiar búsqueda">
+                                <span class="material-symbols-outlined text-[15px]">close</span>
+                            </button>
                         </div>
 
                         <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all cursor-pointer">
@@ -106,10 +109,29 @@ export const CaptureScreen = {
 
     bindEvents() {
         const searchInput = document.getElementById('capture-search-input');
+        const btnClearSearch = document.getElementById('btn-clear-search');
         if (searchInput) {
             searchInput.value = this.searchTerm || '';
+            if (btnClearSearch) {
+                if (this.searchTerm) btnClearSearch.classList.remove('hidden');
+                else btnClearSearch.classList.add('hidden');
+            }
+
             searchInput.oninput = (e) => {
                 this.searchTerm = e.target.value;
+                if (btnClearSearch) {
+                    if (this.searchTerm) btnClearSearch.classList.remove('hidden');
+                    else btnClearSearch.classList.add('hidden');
+                }
+                this.renderGrid();
+            };
+        }
+
+        if (btnClearSearch) {
+            btnClearSearch.onclick = () => {
+                this.searchTerm = '';
+                if (searchInput) searchInput.value = '';
+                btnClearSearch.classList.add('hidden');
                 this.renderGrid();
             };
         }
@@ -193,7 +215,9 @@ export const CaptureScreen = {
                                           e.target.closest('#desktop-input-date');
             const isInsideHeaderControls = e.target.closest('.btn-select-group-all') || 
                                            e.target.closest('.btn-deselect-group-all') || 
-                                           e.target.closest('#btn-desktop-upload');
+                                           e.target.closest('#btn-desktop-upload') ||
+                                           e.target.closest('#capture-search-input') ||
+                                           e.target.closest('#btn-clear-search');
             const isInsideModal = e.target.closest('#photo-zoom-modal');
 
             if (!isInsideCard && !isInsideBatchControls && !isInsideHeaderControls && !isInsideModal) {
@@ -366,6 +390,9 @@ export const CaptureScreen = {
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         ${groupItems.map(it => {
                             const isSelected = this.selectedIds.includes(it.id);
+                            const catalogItem = catalog.find(c => String(c.item).toLowerCase() === (it.actividad || '').toLowerCase());
+                            const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                            const displayDesc = it.descripcion || catalogDesc || 'Sin descripción';
                             return `
                                 <div class="relative aspect-video bg-[#0a0a0c] border border-white/10 rounded-xl overflow-hidden group cursor-pointer transition-all hover:border-primary/50 btn-select-card ${isSelected ? 'ring-2 ring-primary border-primary' : ''}" data-id="${it.id}">
                                     <!-- Imagen -->
@@ -395,10 +422,10 @@ export const CaptureScreen = {
                                                 <span class="text-[9px] font-mono font-bold bg-primary/20 text-primary border border-primary/20 px-1.5 py-0.5 rounded truncate max-w-[80px]">${it.actividad || 'GENERAL'}</span>
                                                 <span class="text-[8px] font-mono text-white/50">${it.timeStr || ''}</span>
                                             </div>
-                                            ${it.descripcion ? `
-                                                <p class="text-[10px] text-white/90 truncate leading-tight font-body">${it.descripcion}</p>
-                                            ` : `
+                                            ${displayDesc === 'Sin descripción' ? `
                                                 <p class="text-[10px] text-white/30 italic truncate leading-tight font-body">Sin descripción</p>
+                                            ` : `
+                                                <p class="text-[10px] text-white/90 truncate leading-tight font-body" title="${displayDesc}">${displayDesc}</p>
                                             `}
                                         </div>
                                     </div>
