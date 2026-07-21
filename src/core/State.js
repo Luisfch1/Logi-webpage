@@ -163,6 +163,30 @@ class StateManager {
         this.notify('project');
     }
 
+    async closeProject() {
+        this.currentProject = null;
+        localStorage.removeItem('last_active_project_id');
+        this.catalog = [];
+        this.items = [];
+        this.notify('project');
+    }
+
+    async updateCatalog(projectId, catalogItems) {
+        await LogiNative.dbPutCatalog(projectId, catalogItems);
+        if (this.currentProject && this.currentProject.id === projectId) {
+            this.catalog = catalogItems;
+        }
+        this.notify('project');
+    }
+
+    async clearCatalog(projectId) {
+        await LogiNative.dbDeleteCatalog(projectId);
+        if (this.currentProject && this.currentProject.id === projectId) {
+            this.catalog = [];
+        }
+        this.notify('project');
+    }
+
     async createProject(name) {
         const id = 'p_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString(36);
         const proj = { id, name: name.toUpperCase(), createdAt: Date.now() };
