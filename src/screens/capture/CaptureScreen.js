@@ -9,6 +9,7 @@ import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 
 export const CaptureScreen = {
     selectedIds: [],
+    searchTerm: '',
 
     getLayout() {
         const projName = State.currentProject?.name || 'SELECCIONAR PROYECTO';
@@ -23,7 +24,13 @@ export const CaptureScreen = {
                         <h1 class="text-2xl font-bold font-headline text-white" id="capture-project-title">${projName}</h1>
                     </div>
                     
-                    <div class="flex gap-3">
+                    <div class="flex items-center gap-3">
+                        <!-- Buscador Compacto de Evidencias -->
+                        <div class="relative w-64">
+                            <span class="material-symbols-outlined absolute left-3 top-2.5 text-white/30 text-base">search</span>
+                            <input id="capture-search-input" type="text" placeholder="Buscar por ítem o descripción..." class="w-full bg-black/60 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:border-primary/50 outline-none" />
+                        </div>
+
                         <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-base">upload_file</span>
                             <span>Cargar Fotos de Galería</span>
@@ -85,6 +92,7 @@ export const CaptureScreen = {
 
     init() {
         this.selectedIds = [];
+        this.searchTerm = '';
         this.bindEvents();
         this.renderGrid();
 
@@ -97,6 +105,15 @@ export const CaptureScreen = {
     },
 
     bindEvents() {
+        const searchInput = document.getElementById('capture-search-input');
+        if (searchInput) {
+            searchInput.value = this.searchTerm || '';
+            searchInput.oninput = (e) => {
+                this.searchTerm = e.target.value;
+                this.renderGrid();
+            };
+        }
+
         const btnUpload = document.getElementById('btn-desktop-upload');
         if (btnUpload) {
             btnUpload.onclick = () => this.pickFilesFromPC();
@@ -273,14 +290,35 @@ export const CaptureScreen = {
         const container = document.getElementById('desktop-capture-groups');
         if (!container) return;
 
-        const items = State.items;
+        let items = State.items;
+        const query = (this.searchTerm || '').trim().toLowerCase();
+        if (query) {
+            items = items.filter(it => {
+                const activity = (it.actividad || '').toLowerCase();
+                const desc = (it.descripcion || '').toLowerCase();
+                const date = (it.fechaStr || '').toLowerCase();
+                return activity.includes(query) || desc.includes(query) || date.includes(query);
+            });
+        }
 
-        if (items.length === 0) {
+        if (State.items.length === 0) {
             container.innerHTML = `
                 <div class="p-16 border-2 border-dashed border-white/10 rounded-3xl text-center space-y-3">
                     <span class="material-symbols-outlined text-4xl text-white/20">photo_library</span>
                     <p class="text-sm font-bold text-white/60">No hay fotos registradas en este proyecto</p>
                     <p class="text-xs text-white/40 max-w-md mx-auto">Usa el botón "Cargar Fotos de Galería" para agregar fotos. Se organizarán automáticamente por la fecha en que fueron tomadas.</p>
+                </div>
+            `;
+            this.updateBatchPanel();
+            return;
+        }
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="p-16 border-2 border-dashed border-white/10 rounded-3xl text-center space-y-3 bg-black/20">
+                    <span class="material-symbols-outlined text-4xl text-white/20">search_off</span>
+                    <p class="text-sm font-bold text-white/60">Sin coincidencias para "${this.searchTerm}"</p>
+                    <p class="text-xs text-white/40 max-w-md mx-auto">Prueba buscando otro código de actividad, descripción o fecha.</p>
                 </div>
             `;
             this.updateBatchPanel();

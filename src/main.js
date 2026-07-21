@@ -9,7 +9,6 @@ import { LogiNative } from './core/LogiNative.js';
 import { SidebarNav } from './screens/sidebar/SidebarNav.js';
 import { DesignerScreen } from './screens/designer/DesignerScreen.js';
 import { CaptureScreen } from './screens/capture/CaptureScreen.js';
-import { GalleryScreen } from './screens/gallery/GalleryScreen.js';
 import { ProjectsScreen } from './screens/projects/ProjectsScreen.js';
 import { ExportScreen } from './screens/export/ExportScreen.js';
 import { SettingsScreen } from './screens/settings/SettingsScreen.js';
@@ -17,7 +16,6 @@ import { SettingsScreen } from './screens/settings/SettingsScreen.js';
 // Registrar Pantallas de Escritorio
 Architect.register('designer', DesignerScreen);
 Architect.register('capture', CaptureScreen);
-Architect.register('gallery', GalleryScreen);
 Architect.register('projects', ProjectsScreen);
 Architect.register('export', ExportScreen);
 Architect.register('settings', SettingsScreen);

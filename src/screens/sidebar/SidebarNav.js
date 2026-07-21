@@ -37,7 +37,6 @@ export const SidebarNav = {
                     <nav class="space-y-1.5">
                         ${navItem('projects', 'folder_open', 'Gestión de Proyectos')}
                         ${navItem('capture', 'photo_camera', 'Captura de Evidencias')}
-                        ${navItem('gallery', 'photo_library', 'Galería Panorámica')}
                         ${navItem('export', 'output', 'Exportar PDF / Excel')}
                         ${navItem('settings', 'settings', 'Configuración')}
                         ${navItem('designer', 'design_services', 'Diseñador .logifmt')}
