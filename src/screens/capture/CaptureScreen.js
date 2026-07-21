@@ -406,14 +406,9 @@ export const CaptureScreen = {
                                                 ${isSelected ? 'check_circle' : 'radio_button_unchecked'}
                                             </span>
                                             
-                                            <div class="flex gap-1 bg-black/75 p-0.5 rounded-lg border border-white/10">
-                                                <button class="btn-zoom-single-photo p-1 text-white/70 hover:text-white rounded hover:bg-white/10 transition-all cursor-pointer" data-id="${it.id}" title="Ampliar Imagen">
-                                                    <span class="material-symbols-outlined text-[15px]">zoom_in</span>
-                                                </button>
-                                                <button class="btn-delete-single-photo p-1 text-white/70 hover:text-rose-400 rounded hover:bg-white/10 transition-all cursor-pointer" data-id="${it.id}" data-file="${it.filename}" title="Eliminar Foto">
-                                                    <span class="material-symbols-outlined text-[15px]">delete</span>
-                                                </button>
-                                            </div>
+                                            <button class="btn-delete-single-photo bg-black/75 p-1.5 text-white/70 hover:text-rose-400 rounded-lg border border-white/10 hover:bg-black/90 transition-all cursor-pointer" data-id="${it.id}" data-file="${it.filename}" title="Eliminar Foto">
+                                                <span class="material-symbols-outlined text-[15px]">delete</span>
+                                            </button>
                                         </div>
 
                                         <!-- Detalles Inferiores -->
@@ -445,7 +440,7 @@ export const CaptureScreen = {
         // 1. Vincular Clic en Tarjeta para Selección
         container.querySelectorAll('.btn-select-card').forEach(card => {
             card.onclick = (e) => {
-                if (e.target.closest('.btn-zoom-single-photo') || e.target.closest('.btn-delete-single-photo')) {
+                if (e.target.closest('.btn-delete-single-photo')) {
                     return;
                 }
 
@@ -478,10 +473,12 @@ export const CaptureScreen = {
             };
         });
 
-        // 2. Vincular Ampliación de Foto Individual
-        container.querySelectorAll('.btn-zoom-single-photo').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
+        // 2. Vincular Ampliación de Foto con Doble Clic en la Tarjeta
+        container.querySelectorAll('.btn-select-card').forEach(card => {
+            card.ondblclick = async (e) => {
+                if (e.target.closest('.btn-delete-single-photo')) return;
+
+                const id = card.dataset.id;
                 const item = State.items.find(i => i.id === id);
                 const zoomModal = document.getElementById('photo-zoom-modal');
                 const zoomImg = document.getElementById('zoom-modal-img');
@@ -491,7 +488,10 @@ export const CaptureScreen = {
                     const src = item._tempImageSrc || await LogiNative.getBlobUri(item.filename);
                     zoomImg.src = src;
                     if (zoomCaption) {
-                        zoomCaption.textContent = `${item.actividad || 'GENERAL'} · ${item.descripcion || 'Sin Descripción'}`;
+                        const catalogItem = catalog.find(c => String(c.item).toLowerCase() === (item.actividad || '').toLowerCase());
+                        const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                        const displayDesc = item.descripcion || catalogDesc || 'Sin descripción';
+                        zoomCaption.textContent = `${item.actividad || 'GENERAL'} · ${displayDesc}`;
                     }
                     zoomModal.classList.remove('hidden');
                 }
