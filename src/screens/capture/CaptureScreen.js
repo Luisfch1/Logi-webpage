@@ -291,13 +291,22 @@ export const CaptureScreen = {
         if (!container) return;
 
         let items = State.items;
+        const catalog = State.catalog || [];
         const query = (this.searchTerm || '').trim().toLowerCase();
         if (query) {
             items = items.filter(it => {
-                const activity = (it.actividad || '').toLowerCase();
+                const activityCode = (it.actividad || '').toLowerCase();
                 const desc = (it.descripcion || '').toLowerCase();
                 const date = (it.fechaStr || '').toLowerCase();
-                return activity.includes(query) || desc.includes(query) || date.includes(query);
+                
+                // Buscar la descripción correspondiente en el catálogo de ítems
+                const catalogItem = catalog.find(c => String(c.item).toLowerCase() === activityCode);
+                const catalogDesc = catalogItem ? (catalogItem.descripcion || '').toLowerCase() : '';
+                
+                return activityCode.includes(query) || 
+                       desc.includes(query) || 
+                       date.includes(query) || 
+                       catalogDesc.includes(query);
             });
         }
 
