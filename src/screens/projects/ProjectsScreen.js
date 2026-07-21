@@ -6,6 +6,7 @@ import { State } from '../../core/State.js';
 import { Architect } from '../../core/Architect.js';
 import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 import { LogiNative } from '../../core/LogiNative.js';
+import * as XLSX from 'xlsx';
 
 export const ProjectsScreen = {
     leftTab: 'projects', // 'projects' o 'catalog'
@@ -43,7 +44,7 @@ export const ProjectsScreen = {
                             <div class="h-40 flex flex-col items-center justify-center text-center p-4 space-y-1.5">
                                 <span class="material-symbols-outlined text-xl text-white/20">format_list_bulleted</span>
                                 <p class="text-xs text-white/40 font-bold">Catálogo de Ítems Vacío</p>
-                                <p class="text-[9px] text-white/30 max-w-[200px] leading-normal">Carga un JSON desde la barra de herramientas o agrega uno manual.</p>
+                                <p class="text-[9px] text-white/30 max-w-[200px] leading-normal">Carga un JSON / Excel desde la barra de herramientas o agrega uno manual.</p>
                             </div>
                         ` : activeCatalog.map(c => `
                             <div class="flex items-center justify-between gap-3 p-2 bg-black/40 border border-white/5 rounded-lg text-xs hover:border-white/15 transition-all group">
@@ -222,9 +223,9 @@ export const ProjectsScreen = {
                     ${currentProject ? `
                         <div class="flex items-center gap-2 border-t md:border-t-0 md:border-l border-white/10 pt-2 md:pt-0 md:pl-4">
                             <span class="text-white/40 font-mono text-[9px] uppercase tracking-wider mr-2">Catálogo:</span>
-                            <button id="btn-menu-upload-catalog" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white font-bold transition-all flex items-center gap-1 cursor-pointer" title="Cargar archivo JSON">
+                            <button id="btn-menu-upload-catalog" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white font-bold transition-all flex items-center gap-1 cursor-pointer" title="Cargar archivo JSON o Excel">
                                 <span class="material-symbols-outlined text-[13px]">upload</span>
-                                <span>Cargar JSON</span>
+                                <span>Cargar JSON / Excel</span>
                             </button>
                             <button id="btn-menu-clear-catalog" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-rose-500/10 text-white/70 hover:text-rose-400 transition-all flex items-center gap-1 cursor-pointer">
                                 <span class="material-symbols-outlined text-[13px]">delete</span>
@@ -517,10 +518,50 @@ export const ProjectsScreen = {
     triggerCatalogUpload() {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.json, .xlsx, .xls';
         input.onchange = (e) => {
             const file = e.target.files[0];
-            if (file) {
+            if (!file) return;
+
+            const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+            if (isExcel) {
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const data = evt.target.result;
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                        const cleanItems = rawRows.map(row => {
+                            const itemKey = Object.keys(row).find(k => k.toUpperCase() === 'ITEM' || k.toUpperCase() === 'CODIGO' || k.toUpperCase() === 'COD') || Object.keys(row)[0];
+                            const descKey = Object.keys(row).find(k => k.toUpperCase() === 'DESCRIPCION' || k.toUpperCase() === 'DESCRIPCIÓN' || k.toUpperCase() === 'NOMBRE' || k.toUpperCase() === 'DETALLE') || Object.keys(row)[1];
+
+                            if (itemKey && row[itemKey] !== undefined && row[itemKey] !== "") {
+                                const itemCode = String(row[itemKey]).trim();
+                                const itemDesc = descKey ? String(row[descKey] || '').trim() : '';
+                                return {
+                                    item: itemCode,
+                                    descripcion: itemDesc || 'Sin descripción'
+                                };
+                            }
+                            return null;
+                        }).filter(Boolean);
+
+                        if (cleanItems.length > 0) {
+                            await State.updateCatalog(State.currentProject.id, cleanItems);
+                            alert(`¡Catálogo Excel cargado con éxito! Se importaron ${cleanItems.length} actividades.`);
+                        } else {
+                            alert("No se encontraron registros válidos en la primera hoja del archivo Excel. Asegúrate de tener columnas llamadas 'ITEM' y 'DESCRIPCION'.");
+                        }
+                    } catch (err) {
+                        alert("Error al procesar el archivo Excel: " + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
                 const reader = new FileReader();
                 reader.onload = async (evt) => {
                     try {
