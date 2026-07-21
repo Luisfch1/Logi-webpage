@@ -32,26 +32,26 @@ export const CaptureScreen = {
                 </div>
 
                 <!-- Panel de Control y Edición en Lote -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-[#0a0a0c] p-5 rounded-2xl border border-white/10 items-end">
-                    <div class="lg:col-span-3">
+                <div class="flex flex-col md:flex-row gap-4 bg-[#0a0a0c] p-4 rounded-xl border border-white/10 items-end">
+                    <div class="w-full md:w-64 shrink-0">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Ítem / Actividad</label>
-                        <select id="desktop-select-item" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-primary outline-none">
+                        <select id="desktop-select-item" class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary outline-none">
                             <option value="GENERAL">GENERAL (Sin ítem específico)</option>
                             ${catalog.map(c => `<option value="${c.item}">${c.item} - ${c.descripcion}</option>`).join('')}
                         </select>
                     </div>
 
-                    <div class="lg:col-span-5">
+                    <div class="flex-1 min-w-[200px] w-full font-body">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Descripción Técnica</label>
-                        <input id="desktop-input-desc" type="text" placeholder="Escribe un comentario o descripción técnica..." class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-primary outline-none" />
+                        <input id="desktop-input-desc" type="text" placeholder="Escribe un comentario o descripción técnica..." class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary outline-none" />
                     </div>
 
-                    <div class="lg:col-span-4 flex gap-2">
-                        <button id="btn-apply-batch" class="flex-1 px-3.5 py-2.5 rounded-xl text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-not-allowed opacity-50" disabled>
+                    <div class="flex gap-2 shrink-0 w-full md:w-auto">
+                        <button id="btn-apply-batch" class="flex-1 md:flex-initial px-4 py-2 rounded-lg text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-not-allowed opacity-50 h-[34px]" disabled>
                             <span class="material-symbols-outlined text-sm font-bold">check_circle</span>
-                            <span id="txt-apply-batch">Aplicar a Seleccionadas (0)</span>
+                            <span id="txt-apply-batch">Aplicar (0)</span>
                         </button>
-                        <button id="btn-delete-batch" class="px-3.5 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/20 transition-all cursor-not-allowed opacity-0" disabled>
+                        <button id="btn-delete-batch" class="px-3 py-2 rounded-lg bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 border border-rose-500/20 transition-all cursor-not-allowed opacity-0 h-[34px]" disabled>
                             <span class="material-symbols-outlined text-sm">delete</span>
                         </button>
                     </div>
@@ -203,21 +203,21 @@ export const CaptureScreen = {
         const count = this.selectedIds.length;
         if (count > 0) {
             btnApply.disabled = false;
-            btnApply.className = "flex-1 px-3.5 py-2.5 rounded-xl text-black bg-primary font-black text-xs flex items-center justify-center gap-2 transition-all glow-border cursor-pointer";
-            if (txtApply) txtApply.textContent = `Aplicar a Seleccionadas (${count})`;
+            btnApply.className = "flex-1 md:flex-initial px-4 py-2 rounded-lg text-black bg-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all glow-border cursor-pointer h-[34px]";
+            if (txtApply) txtApply.textContent = `Aplicar (${count})`;
 
             if (btnDelete) {
                 btnDelete.disabled = false;
-                btnDelete.className = "px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/30 transition-all cursor-pointer opacity-100";
+                btnDelete.className = "px-3 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 border border-rose-500/30 transition-all cursor-pointer opacity-100 h-[34px]";
             }
         } else {
             btnApply.disabled = true;
-            btnApply.className = "flex-1 px-3.5 py-2.5 rounded-xl text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-not-allowed opacity-50";
-            if (txtApply) txtApply.textContent = "Aplicar a Seleccionadas (0)";
+            btnApply.className = "flex-1 md:flex-initial px-4 py-2 rounded-lg text-white/40 bg-white/5 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-not-allowed opacity-50 h-[34px]";
+            if (txtApply) txtApply.textContent = "Aplicar (0)";
 
             if (btnDelete) {
                 btnDelete.disabled = true;
-                btnDelete.className = "px-3.5 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 border border-rose-500/20 transition-all cursor-not-allowed opacity-0";
+                btnDelete.className = "px-3.5 py-2 rounded-lg bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 border border-rose-500/20 transition-all cursor-not-allowed opacity-0 h-[34px]";
             }
         }
     },
