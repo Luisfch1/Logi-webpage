@@ -33,7 +33,7 @@ export const CaptureScreen = {
 
                 <!-- Panel de Control y Edición en Lote -->
                 <div class="flex flex-col md:flex-row gap-4 bg-[#0a0a0c] p-4 rounded-xl border border-white/10 items-end">
-                    <div class="w-full md:w-64 shrink-0">
+                    <div class="w-full md:w-56 shrink-0">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Ítem / Actividad</label>
                         <select id="desktop-select-item" class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary outline-none">
                             <option value="GENERAL">GENERAL (Sin ítem específico)</option>
@@ -44,6 +44,11 @@ export const CaptureScreen = {
                     <div class="flex-1 min-w-[200px] w-full font-body">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Descripción Técnica</label>
                         <input id="desktop-input-desc" type="text" placeholder="Escribe un comentario o descripción técnica..." class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary outline-none" />
+                    </div>
+
+                    <div class="w-full md:w-44 shrink-0 font-body">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5">Fecha Evidencia</label>
+                        <input id="desktop-input-date" type="date" class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary outline-none" />
                     </div>
 
                     <div class="flex gap-2 shrink-0 w-full md:w-auto">
@@ -108,20 +113,27 @@ export const CaptureScreen = {
             btnApplyBatch.onclick = async () => {
                 const itemSelect = document.getElementById('desktop-select-item');
                 const descInput = document.getElementById('desktop-input-desc');
+                const dateInput = document.getElementById('desktop-input-date');
 
                 const activity = itemSelect ? itemSelect.value : 'GENERAL';
                 const description = descInput ? descInput.value.trim() : '';
+                const customDateStr = dateInput ? dateInput.value : '';
 
                 if (this.selectedIds.length === 0) return;
 
                 // Actualizar elementos en el Estado
                 for (const id of this.selectedIds) {
-                    await State.updateItem(id, { actividad: activity, descripcion: description });
+                    const updates = { actividad: activity, descripcion: description };
+                    if (customDateStr) {
+                        updates.createdAt = new Date(customDateStr + 'T12:00:00').getTime();
+                    }
+                    await State.updateItem(id, updates);
                 }
 
                 // Limpiar selección y campos
                 this.selectedIds = [];
                 if (descInput) descInput.value = '';
+                if (dateInput) dateInput.value = '';
                 this.renderGrid();
             };
         }
@@ -157,13 +169,19 @@ export const CaptureScreen = {
             const files = Array.from(e.target.files || []);
             const itemSelect = document.getElementById('desktop-select-item');
             const descInput = document.getElementById('desktop-input-desc');
+            const dateInput = document.getElementById('desktop-input-date');
 
             const activity = itemSelect ? itemSelect.value : 'GENERAL';
             const defaultDescription = descInput ? descInput.value : '';
+            const customDateStr = dateInput ? dateInput.value : '';
 
             for (const file of files) {
                 try {
-                    const photoTimestamp = file.lastModified || Date.now();
+                    let photoTimestamp = file.lastModified || Date.now();
+                    if (customDateStr) {
+                        photoTimestamp = new Date(customDateStr + 'T12:00:00').getTime();
+                    }
+
                     const compressed = await ImageCompressor.compress(file, 1400, 0.75);
                     if (compressed.base64) {
                         const id = 'cap_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -188,6 +206,7 @@ export const CaptureScreen = {
             }
 
             if (descInput) descInput.value = '';
+            if (dateInput) dateInput.value = '';
         };
 
         input.click();
