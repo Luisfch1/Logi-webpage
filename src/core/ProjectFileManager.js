@@ -57,12 +57,12 @@ export const ProjectFileManager = {
             }
         }
 
-        console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logiproject`);
+        console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logi`);
 
-        // 4. Generar archivo Blob .logiproject y descargar
+        // 4. Generar archivo Blob .logi y descargar
         const content = await zip.generateAsync({ type: 'blob' });
         const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logiproject`;
+        const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
 
         const url = URL.createObjectURL(content);
         const a = document.createElement('a');
@@ -77,7 +77,7 @@ export const ProjectFileManager = {
     async importLogiProject(file) {
         if (!file) return;
 
-        console.log(`[ProjectFileManager] Leyendo archivo .logiproject: ${file.name}...`);
+        console.log(`[ProjectFileManager] Leyendo archivo de proyecto: ${file.name}...`);
 
         try {
             const zip = await JSZip.loadAsync(file);
@@ -88,7 +88,7 @@ export const ProjectFileManager = {
             const catalogFile = zip.file('catalog.json');
 
             if (!manifestFile || !itemsFile) {
-                throw new Error("El archivo no es un proyecto .logiproject válido.");
+                throw new Error("El archivo no es un proyecto .logi válido.");
             }
 
             const manifest = JSON.parse(await manifestFile.async('text'));

@@ -11,7 +11,7 @@ class StateManager {
         this._allItems = [];
         this.items = [];
         this.catalog = [];
-        this.currentTab = 'capture';
+        this.currentTab = 'projects';
         this.accentColor = localStorage.getItem('accent_color') || '#cafd00';
         this.galleryCols = parseInt(localStorage.getItem('gallery_cols_desktop')) || 4;
         this.theme = localStorage.getItem('app_theme') || 'dark';

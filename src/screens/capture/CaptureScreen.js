@@ -22,21 +22,9 @@ export const CaptureScreen = {
                     </div>
                     
                     <div class="flex gap-3">
-                        <button id="btn-save-logiproject" class="px-3.5 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-base">save</span>
-                            <span>Guardar Proyecto (.logiproject)</span>
-                        </button>
-                        <button id="btn-open-logiproject" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/10 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-base">folder_open</span>
-                            <span>Abrir Proyecto (.logiproject)</span>
-                        </button>
-                        <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center gap-2 border border-blue-500/30 active:scale-95 transition-all">
+                        <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all">
                             <span class="material-symbols-outlined text-base">upload_file</span>
                             <span>Cargar Fotos de Galería</span>
-                        </button>
-                        <button id="btn-desktop-camera" class="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 font-bold text-xs flex items-center gap-2 border border-white/10 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-base">photo_camera</span>
-                            <span>Webcam</span>
                         </button>
                     </div>
                 </div>
@@ -90,33 +78,9 @@ export const CaptureScreen = {
     },
 
     bindEvents() {
-        const btnSaveProject = document.getElementById('btn-save-logiproject');
-        if (btnSaveProject) {
-            btnSaveProject.onclick = () => ProjectFileManager.exportLogiProject();
-        }
-
-        const btnOpenProject = document.getElementById('btn-open-logiproject');
-        if (btnOpenProject) {
-            btnOpenProject.onclick = () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.logiproject, .zip';
-                input.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (file) ProjectFileManager.importLogiProject(file);
-                };
-                input.click();
-            };
-        }
-
         const btnUpload = document.getElementById('btn-desktop-upload');
         if (btnUpload) {
             btnUpload.onclick = () => this.pickFilesFromPC();
-        }
-
-        const btnCamera = document.getElementById('btn-desktop-camera');
-        if (btnCamera) {
-            btnCamera.onclick = () => this.pickFilesFromPC(true);
         }
 
         const btnCloseZoom = document.getElementById('btn-close-zoom-modal');
@@ -126,12 +90,11 @@ export const CaptureScreen = {
         }
     },
 
-    pickFilesFromPC(isCamera = false) {
+    pickFilesFromPC() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        if (isCamera) input.capture = 'environment';
-        else input.multiple = true;
+        input.multiple = true;
 
         input.onchange = async (e) => {
             const files = Array.from(e.target.files || []);
