@@ -228,7 +228,14 @@ class StateManager {
         if (!cleanData) return;
 
         await LogiNative.dbPut('items_meta', cleanData);
-        this._allItems.unshift(cleanData);
+        
+        const idx = this._allItems.findIndex(i => i.id === cleanData.id);
+        if (idx !== -1) {
+            this._allItems[idx] = cleanData;
+        } else {
+            this._allItems.unshift(cleanData);
+        }
+        
         this.filterItems();
         this.notify('items');
     }
@@ -240,7 +247,12 @@ class StateManager {
             const cleanData = this._sanitize(data);
             if (cleanData) {
                 cleaned.push(cleanData);
-                this._allItems.unshift(cleanData);
+                const idx = this._allItems.findIndex(i => i.id === cleanData.id);
+                if (idx !== -1) {
+                    this._allItems[idx] = cleanData;
+                } else {
+                    this._allItems.unshift(cleanData);
+                }
             }
         }
         if (cleaned.length > 0) {
