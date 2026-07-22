@@ -251,7 +251,10 @@ export const CaptureScreen = {
                 try {
                     let photoTimestamp = file.lastModified || Date.now();
                     if (customDateStr) {
-                        photoTimestamp = new Date(customDateStr + 'T12:00:00').getTime();
+                        const targetDate = new Date(customDateStr + 'T12:00:00');
+                        const fileTime = new Date(file.lastModified || Date.now());
+                        targetDate.setHours(fileTime.getHours(), fileTime.getMinutes(), fileTime.getSeconds(), fileTime.getMilliseconds());
+                        photoTimestamp = targetDate.getTime();
                     }
 
                     const compressed = await ImageCompressor.compress(file, 1400, 0.75);

@@ -122,12 +122,18 @@ export const ProjectsScreen = {
                         </div>
                         <div class="space-y-1.5">
                             <h3 class="text-sm font-bold font-headline text-white tracking-wide uppercase">Ningún Proyecto Abierto</h3>
-                            <p class="text-[11px] text-white/40 max-w-sm mx-auto leading-relaxed">Selecciona un proyecto de la lista izquierda, crea uno nuevo o importa un archivo de extensión .logi desde el menú Archivo para comenzar a trabajar.</p>
+                            <p class="text-[11px] text-white/40 max-w-sm mx-auto leading-relaxed">Selecciona un proyecto de la lista izquierda, crea uno nuevo, importa un archivo de extensión .logi o un archivo de sincronización .json para comenzar.</p>
                         </div>
-                        <button id="btn-open-proj-file-empty" class="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">folder_open</span>
-                            <span>Importar Proyecto (.logi)</span>
-                        </button>
+                        <div class="flex gap-3 justify-center">
+                            <button id="btn-open-proj-file-empty" class="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">folder_open</span>
+                                <span>Importar Proyecto (.logi)</span>
+                            </button>
+                            <button id="btn-import-json-empty" class="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">cloud_download</span>
+                                <span>Importar Sincro (.json)</span>
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -203,9 +209,13 @@ export const ProjectsScreen = {
                             <span class="material-symbols-outlined text-[13px]">add</span>
                             <span>Nuevo</span>
                         </button>
-                        <button id="btn-menu-open" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white font-bold transition-all flex items-center gap-1 cursor-pointer">
+                        <button id="btn-menu-open" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white font-bold transition-all flex items-center gap-1 cursor-pointer" title="Cargar proyecto .logi">
                             <span class="material-symbols-outlined text-[13px]">folder_open</span>
                             <span>Abrir (.logi)</span>
+                        </button>
+                        <button id="btn-menu-import-json" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white font-bold transition-all flex items-center gap-1 cursor-pointer" title="Importar evidencias y metadatos de sincronización .json">
+                            <span class="material-symbols-outlined text-[13px]">cloud_download</span>
+                            <span>Importar JSON</span>
                         </button>
                         ${currentProject ? `
                             <button id="btn-menu-save" class="px-2.5 py-1.5 rounded bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold transition-all flex items-center gap-1 cursor-pointer">
@@ -317,11 +327,28 @@ export const ProjectsScreen = {
             input.click();
         };
 
+        const handleImportJson = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) ProjectFileManager.importControlJson(file);
+            };
+            input.click();
+        };
+
         const btnMenuOpen = document.getElementById('btn-menu-open');
         if (btnMenuOpen) btnMenuOpen.onclick = handleImport;
 
         const btnOpenFileEmpty = document.getElementById('btn-open-proj-file-empty');
         if (btnOpenFileEmpty) btnOpenFileEmpty.onclick = handleImport;
+
+        const btnMenuImportJson = document.getElementById('btn-menu-import-json');
+        if (btnMenuImportJson) btnMenuImportJson.onclick = handleImportJson;
+
+        const btnImportJsonEmpty = document.getElementById('btn-import-json-empty');
+        if (btnImportJsonEmpty) btnImportJsonEmpty.onclick = handleImportJson;
 
         const btnMenuSave = document.getElementById('btn-menu-save');
         if (btnMenuSave) {

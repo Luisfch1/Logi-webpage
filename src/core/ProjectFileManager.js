@@ -141,5 +141,111 @@ export const ProjectFileManager = {
             console.error('[ProjectFileManager] Error al abrir .logiproject:', err);
             alert("Error al abrir el proyecto: " + err.message);
         }
+    },
+
+    async importControlJson(file) {
+        if (!file) return;
+
+        try {
+            // 1. Leer el archivo JSON
+            const reader = new FileReader();
+            const rawJson = await new Promise((resolve, reject) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+
+            const data = JSON.parse(rawJson);
+
+            // 2. Validaciones básicas del formato de CONTROL
+            if (!data.entries || !data.photos) {
+                throw new Error("El archivo no tiene un formato válido de CONTROL (debe contener 'entries' y 'photos').");
+            }
+
+            // 3. Obtener o crear el proyecto de destino
+            let targetProj = State.currentProject;
+            if (data.projectId && data.projectName) {
+                // Si viene metadata de proyecto en el JSON, la usamos para buscar o crear
+                const projects = State.projects || [];
+                const existing = projects.find(p => p.id === data.projectId);
+                if (existing) {
+                    targetProj = existing;
+                } else {
+                    targetProj = {
+                        id: data.projectId,
+                        name: data.projectName,
+                        createdAt: Date.now()
+                    };
+                    await LogiNative.dbPut('meta', targetProj);
+                    console.log(`[ProjectFileManager] Creado nuevo proyecto desde JSON: "${targetProj.name}" (${targetProj.id})`);
+                }
+                // Establecer como proyecto activo
+                await State.setCurrentProject(targetProj);
+            }
+
+            if (!targetProj) {
+                throw new Error("No hay un proyecto activo seleccionado y el archivo JSON no contiene metadatos de proyecto para crearlo automáticamente.");
+            }
+
+            const { entries, photos } = data;
+            console.log(`[ProjectFileManager] Detectadas ${entries.length} entradas y ${photos.length} fotos.`);
+
+            // 4. Crear mapa de fotos (id -> base64Data)
+            const photoMap = {};
+            photos.forEach(p => {
+                if (p.id && p.base64Data) {
+                    photoMap[String(p.id)] = p.base64Data;
+                }
+            });
+
+            // 5. Procesar entradas e imágenes
+            let importedCount = 0;
+            for (const entry of entries) {
+                const id = String(entry.id);
+                const base64Data = photoMap[id];
+                if (!base64Data) {
+                    console.warn(`[ProjectFileManager] Foto con ID ${id} no tiene base64Data, omitiendo.`);
+                    continue;
+                }
+
+                const filename = `${id}.jpg`;
+
+                // Guardar la foto en IndexedDB
+                await LogiNative.storeBlob(filename, base64Data);
+
+                // Parsear fecha
+                let ts = Date.now();
+                if (entry.date) {
+                    const d = new Date(entry.date + 'T12:00:00');
+                    if (!isNaN(d.getTime())) ts = d.getTime();
+                }
+
+                // Crear metadata del ítem heredando el proyecto de destino
+                const itemData = {
+                    id,
+                    descripcion: String(entry.description || ''),
+                    actividad: String(entry.itemCode || 'GENERAL').toUpperCase(),
+                    createdAt: ts,
+                    projectId: targetProj.id,
+                    projectName: targetProj.name,
+                    filename
+                };
+
+                // Guardar en metadata de IndexedDB
+                await LogiNative.dbPut('items_meta', itemData);
+                importedCount++;
+            }
+
+            // 6. Recargar estado
+            await State.loadFromDisk();
+            if (targetProj) {
+                await State.setCurrentProject(targetProj);
+            }
+
+            alert(`¡Importación completada con éxito! Se cargaron ${importedCount} fotos al proyecto "${targetProj.name.toUpperCase()}".`);
+        } catch (err) {
+            console.error('[ProjectFileManager] Error al importar JSON de CONTROL:', err);
+            alert("Error al importar JSON: " + err.message);
+        }
     }
 };

@@ -4,6 +4,7 @@
  */
 import { State } from '../../core/State.js';
 import { LogiNative } from '../../core/LogiNative.js';
+import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 
 export const SettingsScreen = {
     getLayout() {
@@ -46,6 +47,18 @@ export const SettingsScreen = {
                             </button>
                         </div>
                     </div>
+
+                    <!-- Importación de CONTROL -->
+                    <div class="p-6 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-5">
+                        <h3 class="font-headline text-xs font-bold text-white uppercase tracking-widest">Importar Evidencias de CONTROL</h3>
+                        <p class="text-xs text-white/50">Carga un archivo de sincronización de fotos (.json) de la aplicación CONTROL para integrarlo al proyecto activo actual.</p>
+                        
+                        <div class="flex gap-3">
+                            <button id="btn-import-control-json" class="px-4 py-2.5 bg-primary text-black font-bold text-xs rounded-xl glow-border uppercase tracking-wider">
+                                Importar JSON (.json)
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -65,6 +78,22 @@ export const SettingsScreen = {
         const btnCatalog = document.getElementById('btn-upload-catalog-pc');
         if (btnCatalog) {
             btnCatalog.onclick = () => alert("Selecciona un archivo Excel o CSV con el listado de ítems.");
+        }
+
+        const btnImportControl = document.getElementById('btn-import-control-json');
+        if (btnImportControl) {
+            btnImportControl.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        await ProjectFileManager.importControlJson(file);
+                    }
+                };
+                input.click();
+            };
         }
     }
 };
