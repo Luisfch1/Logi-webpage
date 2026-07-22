@@ -4,6 +4,7 @@
  */
 import { State } from '../../core/State.js';
 import { Architect } from '../../core/Architect.js';
+import logoUrl from '../../logo.jpg';
 
 export const SidebarNav = {
     render() {
@@ -24,9 +25,7 @@ export const SidebarNav = {
                 <!-- Marca & Header -->
                 <div class="space-y-8">
                     <div class="flex items-center gap-3 px-2">
-                        <div class="w-9 h-9 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center glow-border">
-                            <span class="material-symbols-outlined text-primary text-xl">token</span>
-                        </div>
+                        <img src="${logoUrl}" class="w-9 h-9 rounded-xl border border-white/10 glow-border object-cover select-none pointer-events-none" alt="LogiStudio Logo" />
                         <div>
                             <h1 class="font-headline font-black tracking-wider text-base text-white uppercase">LOGI<span class="text-primary">STUDIO</span></h1>
                             <p class="text-[9px] font-mono tracking-widest text-white/40 uppercase">WORKSPACE V1.0</p>
