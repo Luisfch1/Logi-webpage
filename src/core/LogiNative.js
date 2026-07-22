@@ -57,6 +57,17 @@ export const LogiNative = {
         return true;
     },
 
+    dbPutBatch: async (store, items) => {
+        if (!Array.isArray(items) || !store) return false;
+        for (const item of items) {
+            const idx = (_webMeta[store] || []).findIndex(i => i.id === item.id);
+            if (idx !== -1) _webMeta[store][idx] = item;
+            else (_webMeta[store] = _webMeta[store] || []).unshift(item);
+        }
+        saveWebMeta(store);
+        return true;
+    },
+
     dbGet: async (store, id) => {
         return (_webMeta[store] || []).find(i => i.id === id) || null;
     },

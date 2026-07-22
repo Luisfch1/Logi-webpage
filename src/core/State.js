@@ -233,6 +233,23 @@ class StateManager {
         this.notify('items');
     }
 
+    async addItemsBatch(dataList) {
+        if (!Array.isArray(dataList)) return;
+        const cleaned = [];
+        for (const data of dataList) {
+            const cleanData = this._sanitize(data);
+            if (cleanData) {
+                cleaned.push(cleanData);
+                this._allItems.unshift(cleanData);
+            }
+        }
+        if (cleaned.length > 0) {
+            await LogiNative.dbPutBatch('items_meta', cleaned);
+        }
+        this.filterItems();
+        this.notify('items');
+    }
+
     async updateItem(id, updates) {
         const item = this._allItems.find(i => i.id === id);
         if (!item) return;

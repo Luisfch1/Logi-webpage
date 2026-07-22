@@ -248,41 +248,69 @@ export const CaptureScreen = {
             const defaultDescription = descInput ? descInput.value : '';
             const customDateStr = dateInput ? dateInput.value : '';
 
-            for (const file of files) {
-                try {
-                    let photoTimestamp = file.lastModified || Date.now();
-                    if (customDateStr) {
-                        const targetDate = new Date(customDateStr + 'T12:00:00');
-                        const fileTime = new Date(file.lastModified || Date.now());
-                        targetDate.setHours(fileTime.getHours(), fileTime.getMinutes(), fileTime.getSeconds(), fileTime.getMilliseconds());
-                        photoTimestamp = targetDate.getTime();
+            const metadataList = [];
+            const concurrency = 5;
+            const fileChunks = [];
+            for (let i = 0; i < files.length; i += concurrency) {
+                fileChunks.push(files.slice(i, i + concurrency));
+            }
+
+            // Mostrar un indicador visual de carga
+            const uploadBtn = document.getElementById('btn-desktop-upload');
+            const originalHtml = uploadBtn ? uploadBtn.innerHTML : '';
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = `<span class="material-symbols-outlined text-xs animate-spin">sync</span> Procesando ${files.length} fotos...`;
+            }
+
+            for (const chunk of fileChunks) {
+                await Promise.all(chunk.map(async (file) => {
+                    try {
+                        let photoTimestamp = file.lastModified || Date.now();
+                        if (customDateStr) {
+                            const targetDate = new Date(customDateStr + 'T12:00:00');
+                            const fileTime = new Date(file.lastModified || Date.now());
+                            targetDate.setHours(fileTime.getHours(), fileTime.getMinutes(), fileTime.getSeconds(), fileTime.getMilliseconds());
+                            photoTimestamp = targetDate.getTime();
+                        }
+
+                        const compressed = await ImageCompressor.compress(file, 1400, 0.75);
+                        if (compressed.base64) {
+                            const id = 'cap_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+                            const filename = id + '.jpg';
+
+                            const data = {
+                                id,
+                                descripcion: defaultDescription,
+                                actividad: activity,
+                                createdAt: photoTimestamp,
+                                projectId: State.currentProject?.id || 'p_default',
+                                filename
+                            };
+
+                            await LogiNative.storeBlob(filename, compressed.base64);
+                            data._tempImageSrc = "data:image/jpeg;base64," + compressed.base64;
+                            metadataList.push(data);
+                        }
+                    } catch (err) {
+                        console.error("Error procesando imagen:", err);
                     }
+                }));
+            }
 
-                    const compressed = await ImageCompressor.compress(file, 1400, 0.75);
-                    if (compressed.base64) {
-                        const id = 'cap_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                        const filename = id + '.jpg';
+            if (metadataList.length > 0) {
+                await State.addItemsBatch(metadataList);
+            }
 
-                        const data = {
-                            id,
-                            descripcion: defaultDescription,
-                            actividad: activity,
-                            createdAt: photoTimestamp,
-                            projectId: State.currentProject?.id || 'p_default',
-                            filename
-                        };
-
-                        await LogiNative.storeBlob(filename, compressed.base64);
-                        data._tempImageSrc = "data:image/jpeg;base64," + compressed.base64;
-                        await State.addItem(data);
-                    }
-                } catch (err) {
-                    console.error("Error procesando imagen:", err);
-                }
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = originalHtml;
             }
 
             if (descInput) descInput.value = '';
             if (dateInput) dateInput.value = '';
+            this.selectedIds = [];
+            this.renderGrid();
         };
 
         input.click();

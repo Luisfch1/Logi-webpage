@@ -14,13 +14,40 @@ export const ProjectFileManager = {
             return;
         }
 
+        let handle = State.currentProjectFileHandle;
+        
+        // 1. Si no hay handle y el navegador soporta el picker, pedirlo INMEDIATAMENTE
+        // para no perder el gesto del usuario en navegadores basados en Chromium.
+        if (!handle && window.showSaveFilePicker) {
+            try {
+                const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                const suggestedFileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
+                
+                handle = await window.showSaveFilePicker({
+                    suggestedName: suggestedFileName,
+                    types: [{
+                        description: 'Proyecto Logi Workspace (.logi)',
+                        accept: {
+                            'application/octet-stream': ['.logi']
+                        }
+                    }]
+                });
+                State.currentProjectFileHandle = handle;
+            } catch (err) {
+                console.warn('[ProjectFileManager] File picker cancelled or failed:', err);
+                if (err.name === 'AbortError') {
+                    return; // El usuario canceló la acción conscientemente
+                }
+            }
+        }
+
         console.log(`[ProjectFileManager] Exportando archivo .logiproject de "${proj.name}"...`);
 
         const zip = new JSZip();
         const items = State.items;
         const catalog = State.catalog || [];
 
-        // 1. Manifiesto del Proyecto
+        // 2. Manifiesto del Proyecto
         const manifest = {
             version: '1.0.0',
             exportedAt: new Date().toISOString(),
@@ -32,7 +59,7 @@ export const ProjectFileManager = {
         zip.file('manifest.json', JSON.stringify(manifest, null, 2));
         zip.file('catalog.json', JSON.stringify(catalog, null, 2));
 
-        // 2. Metadatos de Ítems sin Base64
+        // 3. Metadatos de Ítems sin Base64
         const cleanItems = items.map(it => {
             const copy = { ...it };
             delete copy._tempImageSrc;
@@ -42,63 +69,51 @@ export const ProjectFileManager = {
 
         zip.file('items.json', JSON.stringify(cleanItems, null, 2));
 
-        // 3. Empaquetar Fotografías en blobs/
+        // 4. Empaquetar Fotografías en blobs/ en lotes de concurrencia 10
         const blobsFolder = zip.folder('blobs');
         let packedCount = 0;
 
-        for (const it of items) {
-            if (it.filename) {
-                const b64 = await LogiNative.readBlobAsBase64(it.filename);
-                if (b64) {
-                    const rawBase64 = b64.replace(/^data:image\/[a-z]+;base64,/, '');
-                    blobsFolder.file(it.filename, rawBase64, { base64: true });
-                    packedCount++;
+        const concurrency = 10;
+        const itemChunks = [];
+        for (let i = 0; i < items.length; i += concurrency) {
+            itemChunks.push(items.slice(i, i + concurrency));
+        }
+
+        for (const chunk of itemChunks) {
+            await Promise.all(chunk.map(async (it) => {
+                if (it.filename) {
+                    const b64 = await LogiNative.readBlobAsBase64(it.filename);
+                    if (b64) {
+                        const rawBase64 = b64.replace(/^data:image\/[a-z]+;base64,/, '');
+                        blobsFolder.file(it.filename, rawBase64, { base64: true });
+                        packedCount++;
+                    }
                 }
-            }
+            }));
         }
 
         console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logi`);
 
-        // 4. Generar archivo Blob .logi y guardar (o sobrescribir)
+        // 5. Generar archivo Blob .logi y guardar (o sobrescribir)
         const content = await zip.generateAsync({ type: 'blob' });
-        const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
 
         let savedDirectly = false;
-        if (State.currentProjectFileHandle || window.showSaveFilePicker) {
+        if (handle) {
             try {
-                let handle = State.currentProjectFileHandle;
-                if (!handle && window.showSaveFilePicker) {
-                    handle = await window.showSaveFilePicker({
-                        suggestedName: fileName,
-                        types: [{
-                            description: 'Proyecto Logi Workspace (.logi)',
-                            accept: {
-                                'application/octet-stream': ['.logi']
-                            }
-                        }]
-                    });
-                    State.currentProjectFileHandle = handle;
-                }
-
-                if (handle) {
-                    // Si ya se tiene o se obtuvo el handle, se sobrescribe directamente
-                    const writable = await handle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                    savedDirectly = true;
-                    alert("¡Proyecto guardado y sobrescrito con éxito en el archivo original!");
-                }
+                const writable = await handle.createWritable();
+                await writable.write(content);
+                await writable.close();
+                savedDirectly = true;
+                alert("¡Proyecto guardado y sobrescrito con éxito en el archivo original!");
             } catch (err) {
-                console.error('[ProjectFileManager] Error al guardar directamente:', err);
-                if (err.name === 'AbortError') {
-                    return; // El usuario canceló la acción
-                }
+                console.error('[ProjectFileManager] Error al escribir directamente en disco:', err);
             }
         }
 
         if (!savedDirectly) {
-            // Fallback a descarga tradicional del navegador
+            // Fallback a descarga tradicional del navegador (si no hay handle y no se soporta showSaveFilePicker)
+            const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
             const url = URL.createObjectURL(content);
             const a = document.createElement('a');
             a.href = url;
@@ -162,10 +177,11 @@ export const ProjectFileManager = {
             }
 
             // 4. Importar Ítems y Actualizar Estado
-            for (const it of importedItems) {
+            const itemsToPut = importedItems.map(it => {
                 it.projectId = importedProj.id;
-                await LogiNative.dbPut('items_meta', it);
-            }
+                return it;
+            });
+            await LogiNative.dbPutBatch('items_meta', itemsToPut);
 
             // 5. Establecer proyecto activo y recargar
             await State.loadFromDisk();
@@ -235,6 +251,7 @@ export const ProjectFileManager = {
 
             // 5. Procesar entradas e imágenes
             let importedCount = 0;
+            const itemsData = [];
             for (const entry of entries) {
                 const id = String(entry.id);
                 const base64Data = photoMap[id];
@@ -265,10 +282,12 @@ export const ProjectFileManager = {
                     projectName: targetProj.name,
                     filename
                 };
-
-                // Guardar en metadata de IndexedDB
-                await LogiNative.dbPut('items_meta', itemData);
+                itemsData.push(itemData);
                 importedCount++;
+            }
+
+            if (itemsData.length > 0) {
+                await LogiNative.dbPutBatch('items_meta', itemsData);
             }
 
             // 6. Recargar estado
