@@ -269,7 +269,10 @@ export const ProjectsScreen = {
                         <span class="material-symbols-outlined text-xl">close</span>
                     </button>
                     <img id="zoom-modal-img" class="max-h-[75vh] max-w-full rounded-2xl object-contain border border-white/10" src="" alt="Vista Previa" />
-                    <p id="zoom-modal-caption" class="text-xs font-bold text-white font-headline text-center max-w-2xl truncate"></p>
+                    <div id="zoom-modal-caption-box" class="w-full max-w-2xl text-center space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5 font-mono text-xs select-text">
+                        <div id="zoom-modal-item" class="font-bold text-primary truncate max-w-full"></div>
+                        <div id="zoom-modal-desc" class="text-white/80 font-body leading-relaxed break-words whitespace-pre-wrap text-center max-h-24 overflow-y-auto pr-1"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -465,7 +468,6 @@ export const ProjectsScreen = {
         // --- Eventos del Visualizador de Evidencias (Derecha) ---
         const zoomModal = document.getElementById('photo-zoom-modal');
         const zoomImg = document.getElementById('zoom-modal-img');
-        const zoomCaption = document.getElementById('zoom-modal-caption');
 
         document.querySelectorAll('.btn-zoom-preview-photo').forEach(card => {
             card.onclick = async (e) => {
@@ -476,9 +478,21 @@ export const ProjectsScreen = {
                 if (item && zoomModal && zoomImg) {
                     const src = item._tempImageSrc || await LogiNative.getBlobUri(item.filename);
                     zoomImg.src = src;
-                    if (zoomCaption) {
-                        zoomCaption.textContent = `${item.actividad || 'GENERAL'} · ${item.descripcion || 'Sin Descripción'}`;
+                    
+                    const itemEl = document.getElementById('zoom-modal-item');
+                    const descEl = document.getElementById('zoom-modal-desc');
+                    
+                    const catalog = State.catalog || [];
+                    const catalogItem = catalog.find(c => String(c.item).toLowerCase() === (item.actividad || '').toLowerCase());
+                    const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                    
+                    if (itemEl) {
+                        itemEl.textContent = `ÍTEM: ${item.actividad || 'GENERAL'}${catalogDesc ? ` - ${catalogDesc}` : ''}`;
                     }
+                    if (descEl) {
+                        descEl.textContent = item.descripcion || 'Sin descripción personalizada';
+                    }
+                    
                     zoomModal.classList.remove('hidden');
                 }
             };
