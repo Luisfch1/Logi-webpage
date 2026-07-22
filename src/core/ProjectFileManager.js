@@ -169,7 +169,7 @@ export const ProjectFileManager = {
 
             // 5. Establecer proyecto activo y recargar
             await State.loadFromDisk();
-            await State.setCurrentProject(importedProj);
+            await State.setCurrentProject(importedProj, true);
 
             alert(`¡Proyecto "${importedProj.name}" abierto exitosamente! (${extractedCount} fotos restauradas)`);
         } catch (err) {
@@ -215,7 +215,7 @@ export const ProjectFileManager = {
                     console.log(`[ProjectFileManager] Creado nuevo proyecto desde JSON: "${targetProj.name}" (${targetProj.id})`);
                 }
                 // Establecer como proyecto activo
-                await State.setCurrentProject(targetProj);
+                await State.setCurrentProject(targetProj, true);
             }
 
             if (!targetProj) {
@@ -274,7 +274,7 @@ export const ProjectFileManager = {
             // 6. Recargar estado
             await State.loadFromDisk();
             if (targetProj) {
-                await State.setCurrentProject(targetProj);
+                await State.setCurrentProject(targetProj, true);
             }
 
             alert(`¡Importación completada con éxito! Se cargaron ${importedCount} fotos al proyecto "${targetProj.name.toUpperCase()}".`);

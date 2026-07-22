@@ -155,10 +155,12 @@ class StateManager {
         this.items.sort((a, b) => b.createdAt - a.createdAt);
     }
 
-    async setCurrentProject(proj) {
+    async setCurrentProject(proj, keepHandle = false) {
         if (!proj) return;
         this.currentProject = proj;
-        this.currentProjectFileHandle = null;
+        if (!keepHandle) {
+            this.currentProjectFileHandle = null;
+        }
         localStorage.setItem('last_active_project_id', proj.id);
         this.catalog = await LogiNative.dbGetCatalog(proj.id);
         this.filterItems();
