@@ -156,42 +156,95 @@ export const ProjectsScreen = {
                         <div class="flex items-center gap-4 text-[10px] font-mono text-white/50 bg-black/40 border border-white/5 px-3 py-1.5 rounded-lg">
                             <span>Evidencias: <strong class="text-white">${activeProjItems.length}</strong></span>
                             <span>|</span>
-                            <span>Ítems: <strong class="text-white">${State.catalog?.length || 0}</strong></span>
+                            <span>Ítems Catálogo: <strong class="text-white">${State.catalog?.length || 0}</strong></span>
                         </div>
                     </div>
 
-                    <!-- Vista Previa de Evidencias (Widescreen Thumbnail Board) -->
-                    <div class="flex-1 flex flex-col min-h-0 space-y-2">
-                        <h4 class="text-[10px] font-bold font-headline uppercase tracking-widest text-white/40 shrink-0">Evidencias en este Proyecto</h4>
-                        
-                        <div class="flex-1 overflow-y-auto min-h-0 bg-black/30 border border-white/5 rounded-xl p-4">
-                            ${activeProjItems.length === 0 ? `
-                                <div class="h-full flex flex-col items-center justify-center text-center p-6 space-y-1.5">
-                                    <span class="material-symbols-outlined text-xl text-white/20">photo_library</span>
-                                    <p class="text-xs text-white/40 font-bold">No hay evidencias registradas</p>
-                                    <p class="text-[9px] text-white/30 max-w-xs leading-normal">Ve a la pestaña "Captura de Evidencias" para subir fotos del PC.</p>
+                    <!-- Dashboard / Panel Resumen -->
+                    <div class="flex-1 overflow-y-auto space-y-5 pr-1 min-h-0">
+                        <!-- Tarjetas de Estadísticas -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-black/20 border border-white/5 p-4 rounded-xl space-y-1">
+                                <div class="flex items-center gap-2 text-primary">
+                                    <span class="material-symbols-outlined text-lg">photo_library</span>
+                                    <h4 class="text-xs font-bold font-headline uppercase tracking-wider">Evidencias Capturadas</h4>
                                 </div>
-                            ` : `
-                                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                                    ${activeProjItems.map(it => `
-                                        <div class="relative aspect-video bg-black border border-white/10 rounded-lg overflow-hidden group cursor-pointer transition-all hover:border-primary/50 btn-zoom-preview-photo" data-id="${it.id}">
-                                            <!-- Imagen -->
-                                            <img id="prev-img-${it.id}" class="w-full h-full object-cover select-none pointer-events-none" src="${it._tempImageSrc || ''}" alt="Preview" />
-                                            
-                                            <!-- Capa Hover con Detalles -->
-                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-2 transition-all select-none pointer-events-none">
-                                                <div class="flex justify-between items-center w-full pointer-events-auto">
-                                                    <span class="text-[8px] font-mono text-white/60 bg-black/60 px-1 py-0.5 rounded border border-white/10">${it.timeStr || ''}</span>
-                                                    <button class="btn-delete-preview-photo p-0.5 text-white/60 hover:text-rose-400 rounded transition-all hover:bg-white/10" data-id="${it.id}" data-file="${it.filename}" title="Eliminar Foto">
-                                                        <span class="material-symbols-outlined text-[13px]">delete</span>
-                                                    </button>
-                                                </div>
-                                                <span class="text-[8px] font-mono font-bold bg-primary/20 text-primary border border-primary/20 px-1 py-0.5 rounded truncate max-w-full">${it.actividad || 'GENERAL'}</span>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                <p class="text-2xl font-black font-headline text-white">${activeProjItems.length}</p>
+                                <p class="text-[10px] text-white/40">Fotografías técnicas organizadas y listas para exportación.</p>
+                            </div>
+
+                            <div class="bg-black/20 border border-white/5 p-4 rounded-xl space-y-1">
+                                <div class="flex items-center gap-2 text-primary">
+                                    <span class="material-symbols-outlined text-lg">format_list_bulleted</span>
+                                    <h4 class="text-xs font-bold font-headline uppercase tracking-wider">Ítems de Catálogo</h4>
                                 </div>
-                            `}
+                                <p class="text-2xl font-black font-headline text-white">${State.catalog?.length || 0}</p>
+                                <p class="text-[10px] text-white/40">Códigos de obra y actividades registradas para clasificación.</p>
+                            </div>
+                        </div>
+
+                        <!-- Distribución de Fotos por Actividad -->
+                        <div class="bg-black/20 border border-white/5 rounded-xl p-4 space-y-3">
+                            <h4 class="text-[10px] font-bold font-headline uppercase tracking-widest text-primary">Resumen de Evidencias por Actividad</h4>
+                            <div class="max-h-60 overflow-y-auto pr-1">
+                                ${(() => {
+                                    // Agrupar conteo de fotos por actividad
+                                    const counts = {};
+                                    activeProjItems.forEach(it => {
+                                        const act = it.actividad || 'GENERAL';
+                                        counts[act] = (counts[act] || 0) + 1;
+                                    });
+
+                                    const activities = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+                                    if (activities.length === 0) {
+                                        return `<p class="text-xs text-white/40 italic py-4 text-center">No hay evidencias registradas en este proyecto para resumir.</p>`;
+                                    }
+
+                                    return `
+                                        <table class="w-full text-xs text-left border-collapse">
+                                            <thead>
+                                                <tr class="border-b border-white/10 text-white/50 text-[9px] uppercase tracking-wider">
+                                                    <th class="py-2">Código Actividad</th>
+                                                    <th class="py-2">Descripción del Catálogo</th>
+                                                    <th class="py-2 text-right">Fotos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${activities.map(([act, count]) => {
+                                                    const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === act.toUpperCase());
+                                                    const desc = catalogItem ? catalogItem.descripcion : 'Sin descripción técnica';
+                                                    return `
+                                                        <tr class="border-b border-white/5 hover:bg-white/5">
+                                                            <td class="py-2.5 font-mono font-bold text-white"><span class="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded text-[10px]">${act}</span></td>
+                                                            <td class="py-2.5 text-white/70 max-w-xs truncate" title="${desc}">${desc}</td>
+                                                            <td class="py-2.5 text-right text-white font-mono font-bold">${count}</td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
+                                    `;
+                                })()}
+                            </div>
+                        </div>
+
+                        <!-- Acciones y Enlaces Rápidos -->
+                        <div class="bg-[#050505] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-bold text-white">¿Qué deseas hacer ahora?</h4>
+                                <p class="text-[10px] text-white/40">Navega a los módulos de trabajo para continuar gestionando este proyecto.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button id="btn-go-gallery" class="px-3.5 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">photo_camera</span>
+                                    <span>Ir a la Galería</span>
+                                </button>
+                                <button id="btn-go-export" class="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">output</span>
+                                    <span>Exportar Reporte</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -268,20 +321,6 @@ export const ProjectsScreen = {
                     <!-- COLUMNA DERECHA: Visor Principal -->
                     <div class="col-span-8 h-full bg-[#0a0a0c] border border-white/10 rounded-2xl p-6 flex flex-col min-h-0">
                         ${renderMainWorkspace()}
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL DE ZOOM DE FOTO -->
-            <div id="photo-zoom-modal" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-6 select-none">
-                <div class="max-w-5xl max-h-[90vh] bg-[#0a0a0c] border border-white/10 rounded-3xl p-4 flex flex-col items-center space-y-3 relative shadow-2xl">
-                    <button id="btn-close-zoom-modal" class="absolute top-4 right-4 text-white/60 hover:text-white bg-black/60 p-2 rounded-full border border-white/10 cursor-pointer">
-                        <span class="material-symbols-outlined text-xl">close</span>
-                    </button>
-                    <img id="zoom-modal-img" class="max-h-[75vh] max-w-full rounded-2xl object-contain border border-white/10" src="" alt="Vista Previa" />
-                    <div id="zoom-modal-caption-box" class="w-full max-w-2xl text-center space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5 font-mono text-xs select-text">
-                        <div id="zoom-modal-item" class="font-bold text-primary truncate max-w-full"></div>
-                        <div id="zoom-modal-desc" class="text-white/80 font-body leading-relaxed break-words whitespace-pre-wrap text-center max-h-24 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
             </div>
@@ -514,66 +553,14 @@ export const ProjectsScreen = {
         });
 
         // --- Eventos del Visualizador de Evidencias (Derecha) ---
-        const zoomModal = document.getElementById('photo-zoom-modal');
-        const zoomImg = document.getElementById('zoom-modal-img');
-
-        document.querySelectorAll('.btn-zoom-preview-photo').forEach(card => {
-            card.onclick = async (e) => {
-                if (e.target.closest('.btn-delete-preview-photo')) return;
-
-                const id = card.dataset.id;
-                const item = State.items.find(i => i.id === id);
-                if (item && zoomModal && zoomImg) {
-                    const src = item._tempImageSrc || await LogiNative.getBlobUri(item.filename);
-                    zoomImg.src = src;
-                    
-                    const itemEl = document.getElementById('zoom-modal-item');
-                    const descEl = document.getElementById('zoom-modal-desc');
-                    
-                    const catalog = State.catalog || [];
-                    const catalogItem = catalog.find(c => String(c.item).toLowerCase() === (item.actividad || '').toLowerCase());
-                    const catalogDesc = catalogItem ? catalogItem.descripcion : '';
-                    
-                    if (itemEl) {
-                        itemEl.textContent = `ÍTEM: ${item.actividad || 'GENERAL'}${catalogDesc ? ` - ${catalogDesc}` : ''}`;
-                    }
-                    if (descEl) {
-                        descEl.textContent = item.descripcion || 'Sin descripción personalizada';
-                    }
-                    
-                    zoomModal.classList.remove('hidden');
-                }
-            };
-        });
-
-        document.querySelectorAll('.btn-delete-preview-photo').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
-                const filename = btn.dataset.file;
-                if (confirm("¿Estás seguro de eliminar esta evidencia del disco?")) {
-                    await State.deleteItem(id, filename);
-                }
-            };
-        });
-
-        const btnCloseZoom = document.getElementById('btn-close-zoom-modal');
-        if (btnCloseZoom && zoomModal) {
-            btnCloseZoom.onclick = () => zoomModal.classList.add('hidden');
+        const btnGoGallery = document.getElementById('btn-go-gallery');
+        if (btnGoGallery) {
+            btnGoGallery.onclick = () => State.setTab('capture');
         }
 
-        // Cargar miniaturas de previsualización
-        if (State.currentProject) {
-            const activeProjItems = State.items;
-            activeProjItems.forEach(async (it) => {
-                if (!it._tempImageSrc) {
-                    const uri = await LogiNative.getBlobUri(it.filename);
-                    if (uri) {
-                        it._tempImageSrc = uri;
-                        const img = document.getElementById(`prev-img-${it.id}`);
-                        if (img) img.src = uri;
-                    }
-                }
-            });
+        const btnGoExport = document.getElementById('btn-go-export');
+        if (btnGoExport) {
+            btnGoExport.onclick = () => State.setTab('export');
         }
     },
 
