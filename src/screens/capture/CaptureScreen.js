@@ -7,6 +7,50 @@ import { LogiNative } from '../../core/LogiNative.js';
 import { ImageCompressor } from '../../utils/ImageCompressor.js';
 import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 
+function parseDateFromWhatsAppFilename(filename) {
+    if (!filename) return null;
+    const name = filename.trim().toLowerCase();
+    
+    // Patrón 1: WhatsApp Image 2026-07-21 at 12.34.56.jpeg
+    const pattern1 = /whatsapp[ _]image[ _](\d{4})-(\d{2})-(\d{2})/i;
+    const match1 = name.match(pattern1);
+    if (match1) {
+        const year = parseInt(match1[1], 10);
+        const month = parseInt(match1[2], 10) - 1;
+        const day = parseInt(match1[3], 10);
+        
+        const timePattern = /at[ _](\d{2})[.-](\d{2})(?:[.-](\d{2}))?/i;
+        const timeMatch = name.match(timePattern);
+        let hours = 12, minutes = 0, seconds = 0;
+        if (timeMatch) {
+            hours = parseInt(timeMatch[1], 10);
+            minutes = parseInt(timeMatch[2], 10);
+            if (timeMatch[3]) seconds = parseInt(timeMatch[3], 10);
+        }
+        
+        const dateObj = new Date(year, month, day, hours, minutes, seconds);
+        if (!isNaN(dateObj.getTime())) {
+            return dateObj.getTime();
+        }
+    }
+    
+    // Patrón 2: IMG-20260721-WA0001.jpg
+    const pattern2 = /img-(\d{4})(\d{2})(\d{2})-wa/i;
+    const match2 = name.match(pattern2);
+    if (match2) {
+        const year = parseInt(match2[1], 10);
+        const month = parseInt(match2[2], 10) - 1;
+        const day = parseInt(match2[3], 10);
+        
+        const dateObj = new Date(year, month, day, 12, 0, 0);
+        if (!isNaN(dateObj.getTime())) {
+            return dateObj.getTime();
+        }
+    }
+    
+    return null;
+}
+
 export const CaptureScreen = {
     selectedIds: [],
     searchTerm: '',
@@ -272,6 +316,11 @@ export const CaptureScreen = {
                             const fileTime = new Date(file.lastModified || Date.now());
                             targetDate.setHours(fileTime.getHours(), fileTime.getMinutes(), fileTime.getSeconds(), fileTime.getMilliseconds());
                             photoTimestamp = targetDate.getTime();
+                        } else {
+                            const waTime = parseDateFromWhatsAppFilename(file.name);
+                            if (waTime !== null) {
+                                photoTimestamp = waTime;
+                            }
                         }
 
                         const compressed = await ImageCompressor.compress(file, 1400, 0.75);
