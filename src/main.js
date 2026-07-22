@@ -20,6 +20,25 @@ Architect.register('projects', ProjectsScreen);
 Architect.register('export', ExportScreen);
 Architect.register('settings', SettingsScreen);
 
+// Exponer funciones globales de carga (Loader)
+window.showLoader = (title = 'Cargando Datos', desc = 'Procesando elementos, por favor espera...') => {
+    const loader = document.getElementById('global-loader');
+    const titleEl = document.getElementById('global-loader-title');
+    const descEl = document.getElementById('global-loader-desc');
+    if (loader) {
+        if (titleEl) titleEl.textContent = title;
+        if (descEl) descEl.textContent = desc;
+        loader.classList.remove('hidden');
+    }
+};
+
+window.hideLoader = () => {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('>>> LOGI WORKSPACE (DESKTOP SUITE) INICIALIZADO <<<');
 

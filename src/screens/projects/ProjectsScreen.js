@@ -367,20 +367,28 @@ export const ProjectsScreen = {
                         }]
                     });
                     const file = await handle.getFile();
+                    window.showLoader("Abriendo Proyecto", `Leyendo "${file.name}" y extrayendo evidencias...`);
                     State.currentProjectFileHandle = handle;
                     await ProjectFileManager.importLogiProject(file);
                 } catch (err) {
                     console.log("[ProjectsScreen] Error or abort opening via file picker:", err);
+                } finally {
+                    window.hideLoader();
                 }
             } else {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.logi, .logiproject, .zip';
-                input.onchange = (e) => {
+                input.onchange = async (e) => {
                     const file = e.target.files[0];
                     if (file) {
+                        window.showLoader("Abriendo Proyecto", `Leyendo "${file.name}" y extrayendo evidencias...`);
                         State.currentProjectFileHandle = null;
-                        ProjectFileManager.importLogiProject(file);
+                        try {
+                            await ProjectFileManager.importLogiProject(file);
+                        } finally {
+                            window.hideLoader();
+                        }
                     }
                 };
                 input.click();
@@ -391,9 +399,16 @@ export const ProjectsScreen = {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.json';
-            input.onchange = (e) => {
+            input.onchange = async (e) => {
                 const file = e.target.files[0];
-                if (file) ProjectFileManager.importControlJson(file);
+                if (file) {
+                    window.showLoader("Importando Sincro JSON", `Procesando actividades e imágenes del archivo "${file.name}"...`);
+                    try {
+                        await ProjectFileManager.importControlJson(file);
+                    } finally {
+                        window.hideLoader();
+                    }
+                }
             };
             input.click();
         };

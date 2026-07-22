@@ -41,86 +41,91 @@ export const ProjectFileManager = {
             }
         }
 
-        console.log(`[ProjectFileManager] Exportando archivo .logiproject de "${proj.name}"...`);
+        window.showLoader("Guardando Proyecto", "Comprimiendo evidencias y sobrescribiendo archivo .logi...");
+        try {
+            console.log(`[ProjectFileManager] Exportando archivo .logiproject de "${proj.name}"...`);
 
-        const zip = new JSZip();
-        const items = State.items;
-        const catalog = State.catalog || [];
+            const zip = new JSZip();
+            const items = State.items;
+            const catalog = State.catalog || [];
 
-        // 2. Manifiesto del Proyecto
-        const manifest = {
-            version: '1.0.0',
-            exportedAt: new Date().toISOString(),
-            project: proj,
-            catalogCount: catalog.length,
-            itemsCount: items.length
-        };
+            // 2. Manifiesto del Proyecto
+            const manifest = {
+                version: '1.0.0',
+                exportedAt: new Date().toISOString(),
+                project: proj,
+                catalogCount: catalog.length,
+                itemsCount: items.length
+            };
 
-        zip.file('manifest.json', JSON.stringify(manifest, null, 2));
-        zip.file('catalog.json', JSON.stringify(catalog, null, 2));
+            zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+            zip.file('catalog.json', JSON.stringify(catalog, null, 2));
 
-        // 3. Metadatos de Ítems sin Base64
-        const cleanItems = items.map(it => {
-            const copy = { ...it };
-            delete copy._tempImageSrc;
-            delete copy.base64;
-            return copy;
-        });
+            // 3. Metadatos de Ítems sin Base64
+            const cleanItems = items.map(it => {
+                const copy = { ...it };
+                delete copy._tempImageSrc;
+                delete copy.base64;
+                return copy;
+            });
 
-        zip.file('items.json', JSON.stringify(cleanItems, null, 2));
+            zip.file('items.json', JSON.stringify(cleanItems, null, 2));
 
-        // 4. Empaquetar Fotografías en blobs/ en lotes de concurrencia 10
-        const blobsFolder = zip.folder('blobs');
-        let packedCount = 0;
+            // 4. Empaquetar Fotografías en blobs/ en lotes de concurrencia 10
+            const blobsFolder = zip.folder('blobs');
+            let packedCount = 0;
 
-        const concurrency = 10;
-        const itemChunks = [];
-        for (let i = 0; i < items.length; i += concurrency) {
-            itemChunks.push(items.slice(i, i + concurrency));
-        }
-
-        for (const chunk of itemChunks) {
-            await Promise.all(chunk.map(async (it) => {
-                if (it.filename) {
-                    const b64 = await LogiNative.readBlobAsBase64(it.filename);
-                    if (b64) {
-                        const rawBase64 = b64.replace(/^data:image\/[a-z]+;base64,/, '');
-                        blobsFolder.file(it.filename, rawBase64, { base64: true });
-                        packedCount++;
-                    }
-                }
-            }));
-        }
-
-        console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logi`);
-
-        // 5. Generar archivo Blob .logi y guardar (o sobrescribir)
-        const content = await zip.generateAsync({ type: 'blob' });
-
-        let savedDirectly = false;
-        if (handle) {
-            try {
-                const writable = await handle.createWritable();
-                await writable.write(content);
-                await writable.close();
-                savedDirectly = true;
-                alert("¡Proyecto guardado y sobrescrito con éxito en el archivo original!");
-            } catch (err) {
-                console.error('[ProjectFileManager] Error al escribir directamente en disco:', err);
+            const concurrency = 10;
+            const itemChunks = [];
+            for (let i = 0; i < items.length; i += concurrency) {
+                itemChunks.push(items.slice(i, i + concurrency));
             }
-        }
 
-        if (!savedDirectly) {
-            // Fallback a descarga tradicional del navegador (si no hay handle y no se soporta showSaveFilePicker)
-            const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert(`¡Proyecto exportado con éxito como "${fileName}"! (${packedCount} fotos encriptadas)`);
+            for (const chunk of itemChunks) {
+                await Promise.all(chunk.map(async (it) => {
+                    if (it.filename) {
+                        const b64 = await LogiNative.readBlobAsBase64(it.filename);
+                        if (b64) {
+                            const rawBase64 = b64.replace(/^data:image\/[a-z]+;base64,/, '');
+                            blobsFolder.file(it.filename, rawBase64, { base64: true });
+                            packedCount++;
+                        }
+                    }
+                }));
+            }
+
+            console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logi`);
+
+            // 5. Generar archivo Blob .logi y guardar (o sobrescribir)
+            const content = await zip.generateAsync({ type: 'blob' });
+
+            let savedDirectly = false;
+            if (handle) {
+                try {
+                    const writable = await handle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                    savedDirectly = true;
+                    alert("¡Proyecto guardado y sobrescrito con éxito en el archivo original!");
+                } catch (err) {
+                    console.error('[ProjectFileManager] Error al escribir directamente en disco:', err);
+                }
+            }
+
+            if (!savedDirectly) {
+                // Fallback a descarga tradicional del navegador (si no hay handle y no se soporta showSaveFilePicker)
+                const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+                alert(`¡Proyecto exportado con éxito como "${fileName}"! (${packedCount} fotos encriptadas)`);
+            }
+        } finally {
+            window.hideLoader();
         }
     },
 
