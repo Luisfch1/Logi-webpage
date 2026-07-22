@@ -10,6 +10,8 @@ import { ProjectFileManager } from '../../core/ProjectFileManager.js';
 export const CaptureScreen = {
     selectedIds: [],
     searchTerm: '',
+    renderedIds: [],
+    lastClickedId: null,
 
     getLayout() {
         const projName = State.currentProject?.name || 'SELECCIONAR PROYECTO';
@@ -20,7 +22,6 @@ export const CaptureScreen = {
                 <!-- Header del Workspace -->
                 <div class="flex justify-between items-center border-b border-white/10 pb-4">
                     <div>
-                        <span class="text-[10px] font-bold font-headline uppercase tracking-widest text-primary">Estación de Captura · PC Desktop</span>
                         <h1 class="text-2xl font-bold font-headline text-white" id="capture-project-title">${projName}</h1>
                     </div>
                     
@@ -34,7 +35,7 @@ export const CaptureScreen = {
                             </button>
                         </div>
 
-                        <button id="btn-desktop-upload" class="px-4 py-2.5 rounded-xl bg-primary text-black font-bold text-xs flex items-center gap-2 glow-border active:scale-95 transition-all cursor-pointer">
+                        <button id="btn-desktop-upload" class="px-3.5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-base">upload_file</span>
                             <span>Cargar Fotos de Galería</span>
                         </button>
@@ -374,6 +375,14 @@ export const CaptureScreen = {
 
         const sortedGroupKeys = Object.keys(groups);
 
+        // Conservar la lista ordenada de IDs renderizados para selección con Shift
+        this.renderedIds = [];
+        sortedGroupKeys.forEach(dateKey => {
+            groups[dateKey].forEach(it => {
+                this.renderedIds.push(it.id);
+            });
+        });
+
         container.innerHTML = sortedGroupKeys.map(dateKey => {
             const groupItems = groups[dateKey];
             return `
@@ -451,30 +460,55 @@ export const CaptureScreen = {
                 }
 
                 const id = card.dataset.id;
-                const idx = this.selectedIds.indexOf(id);
-                if (idx === -1) {
-                    this.selectedIds.push(id);
-                    card.classList.add('ring-2', 'ring-primary', 'border-primary');
-                    const badge = card.querySelector('.selected-badge');
-                    if (badge) badge.classList.remove('hidden');
-                    const icon = card.querySelector('.check-icon');
-                    if (icon) {
-                        icon.textContent = 'check_circle';
-                        icon.classList.remove('text-white/60');
-                        icon.classList.add('text-primary', 'font-bold');
+
+                if (e.shiftKey && this.lastClickedId && this.renderedIds.includes(this.lastClickedId)) {
+                    // Seleccionar rango entre el último clic y el clic actual
+                    const startIdx = this.renderedIds.indexOf(this.lastClickedId);
+                    const endIdx = this.renderedIds.indexOf(id);
+                    
+                    const minIdx = Math.min(startIdx, endIdx);
+                    const maxIdx = Math.max(startIdx, endIdx);
+                    
+                    // Añadir todos los elementos del rango a la selección
+                    for (let i = minIdx; i <= maxIdx; i++) {
+                        const targetId = this.renderedIds[i];
+                        if (!this.selectedIds.includes(targetId)) {
+                            this.selectedIds.push(targetId);
+                        }
                     }
+                    
+                    // Renderizar la grilla de nuevo para actualizar badges e iconos
+                    this.renderGrid();
                 } else {
-                    this.selectedIds.splice(idx, 1);
-                    card.classList.remove('ring-2', 'ring-primary', 'border-primary');
-                    const badge = card.querySelector('.selected-badge');
-                    if (badge) badge.classList.add('hidden');
-                    const icon = card.querySelector('.check-icon');
-                    if (icon) {
-                        icon.textContent = 'radio_button_unchecked';
-                        icon.classList.remove('text-primary', 'font-bold');
-                        icon.classList.add('text-white/60');
+                    // Clic normal
+                    const idx = this.selectedIds.indexOf(id);
+                    if (idx === -1) {
+                        this.selectedIds.push(id);
+                        card.classList.add('ring-2', 'ring-primary', 'border-primary');
+                        const badge = card.querySelector('.selected-badge');
+                        if (badge) badge.classList.remove('hidden');
+                        const icon = card.querySelector('.check-icon');
+                        if (icon) {
+                            icon.textContent = 'check_circle';
+                            icon.classList.remove('text-white/60');
+                            icon.classList.add('text-primary', 'font-bold');
+                        }
+                    } else {
+                        this.selectedIds.splice(idx, 1);
+                        card.classList.remove('ring-2', 'ring-primary', 'border-primary');
+                        const badge = card.querySelector('.selected-badge');
+                        if (badge) badge.classList.add('hidden');
+                        const icon = card.querySelector('.check-icon');
+                        if (icon) {
+                            icon.textContent = 'radio_button_unchecked';
+                            icon.classList.remove('text-primary', 'font-bold');
+                            icon.classList.add('text-white/60');
+                        }
                     }
                 }
+                
+                // Guardar último ID cliqueado como ancla para Shift
+                this.lastClickedId = id;
                 this.updateBatchPanel();
             };
         });

@@ -12,7 +12,7 @@ export const SidebarNav = {
         const navItem = (id, icon, label) => {
             const isActive = activeTab === id;
             return `
-                <button id="nav-${id}" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${isActive ? 'text-black bg-primary glow-border' : 'text-white/60 hover:text-white hover:bg-white/5'}" data-tab="${id}">
+                <button id="nav-${id}" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all border ${isActive ? 'text-primary bg-primary/10 border-primary/20 shadow-[0_0_12px_rgba(202,253,0,0.05)]' : 'text-white/60 hover:text-white hover:bg-white/5 border-transparent'}" data-tab="${id}">
                     <span class="material-symbols-outlined text-lg">${icon}</span>
                     <span>${label}</span>
                 </button>
