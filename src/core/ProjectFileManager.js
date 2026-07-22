@@ -59,19 +59,54 @@ export const ProjectFileManager = {
 
         console.log(`[ProjectFileManager] Empaquetadas ${packedCount} fotos en .logi`);
 
-        // 4. Generar archivo Blob .logi y descargar
+        // 4. Generar archivo Blob .logi y guardar (o sobrescribir)
         const content = await zip.generateAsync({ type: 'blob' });
         const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const fileName = `${cleanProjName}_${new Date().toISOString().slice(0, 10)}.logi`;
 
-        const url = URL.createObjectURL(content);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
+        let savedDirectly = false;
+        if (State.currentProjectFileHandle || window.showSaveFilePicker) {
+            try {
+                let handle = State.currentProjectFileHandle;
+                if (!handle && window.showSaveFilePicker) {
+                    handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Proyecto Logi Workspace (.logi)',
+                            accept: {
+                                'application/octet-stream': ['.logi']
+                            }
+                        }]
+                    });
+                    State.currentProjectFileHandle = handle;
+                }
 
-        alert(`¡Proyecto guardado con éxito como "${fileName}"! (${packedCount} fotos encriptadas)`);
+                if (handle) {
+                    // Si ya se tiene o se obtuvo el handle, se sobrescribe directamente
+                    const writable = await handle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                    savedDirectly = true;
+                    alert("¡Proyecto guardado y sobrescrito con éxito en el archivo original!");
+                }
+            } catch (err) {
+                console.error('[ProjectFileManager] Error al guardar directamente:', err);
+                if (err.name === 'AbortError') {
+                    return; // El usuario canceló la acción
+                }
+            }
+        }
+
+        if (!savedDirectly) {
+            // Fallback a descarga tradicional del navegador
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert(`¡Proyecto exportado con éxito como "${fileName}"! (${packedCount} fotos encriptadas)`);
+        }
     },
 
     async importLogiProject(file) {

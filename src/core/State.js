@@ -7,6 +7,7 @@ import { LogiNative } from './LogiNative.js';
 class StateManager {
     constructor() {
         this.currentProject = null;
+        this.currentProjectFileHandle = null;
         this.projects = [];
         this._allItems = [];
         this.items = [];
@@ -157,6 +158,7 @@ class StateManager {
     async setCurrentProject(proj) {
         if (!proj) return;
         this.currentProject = proj;
+        this.currentProjectFileHandle = null;
         localStorage.setItem('last_active_project_id', proj.id);
         this.catalog = await LogiNative.dbGetCatalog(proj.id);
         this.filterItems();
@@ -165,6 +167,7 @@ class StateManager {
 
     async closeProject() {
         this.currentProject = null;
+        this.currentProjectFileHandle = null;
         localStorage.removeItem('last_active_project_id');
         this.catalog = [];
         this.items = [];

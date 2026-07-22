@@ -316,15 +316,36 @@ export const ProjectsScreen = {
             };
         }
 
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.logi, .logiproject, .zip';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) ProjectFileManager.importLogiProject(file);
-            };
-            input.click();
+        const handleImport = async () => {
+            if (window.showOpenFilePicker) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Proyecto Logi Workspace (.logi)',
+                            accept: {
+                                'application/octet-stream': ['.logi']
+                            }
+                        }]
+                    });
+                    const file = await handle.getFile();
+                    State.currentProjectFileHandle = handle;
+                    await ProjectFileManager.importLogiProject(file);
+                } catch (err) {
+                    console.log("[ProjectsScreen] Error or abort opening via file picker:", err);
+                }
+            } else {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.logi, .logiproject, .zip';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        State.currentProjectFileHandle = null;
+                        ProjectFileManager.importLogiProject(file);
+                    }
+                };
+                input.click();
+            }
         };
 
         const handleImportJson = () => {
