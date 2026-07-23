@@ -5,6 +5,7 @@
 import JSZip from 'jszip';
 import { State } from '../../core/State.js';
 import { LogiNative } from '../../core/LogiNative.js';
+import { Architect } from '../../core/Architect.js';
 
 export const ExportScreen = {
     assistantMode: false,
