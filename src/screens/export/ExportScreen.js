@@ -417,22 +417,37 @@ export const ExportScreen = {
                 
                 const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
                 const catalogDesc = catalogItem ? catalogItem.descripcion : '';
-                const displayDesc = photo.descripcion || catalogDesc || 'Sin descripción';
-                const timeStr = photo.timeStr || new Date(photo.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const dateStr = photo.fechaStr || new Date(photo.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+                const displayDesc = photo.descripcion || catalogDesc || '';
                 
+                const isGeneral = !photo.actividad || String(photo.actividad).trim().toUpperCase() === 'GENERAL';
+                const hasAct = !isGeneral;
+                const hasDesc = !!displayDesc;
+
+                let detailsHtml = '';
+                if (hasAct || hasDesc) {
+                    detailsHtml = `
+                        <div class="photo-details" style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 11px;">
+                            ${hasAct ? `
+                                <div class="photo-act-time" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 6px;">
+                                    <span class="photo-act" style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo.actividad}</span>
+                                </div>
+                            ` : ''}
+                            ${hasDesc ? `
+                                <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-family: sans-serif;">${displayDesc}</p>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
                 photoCardsHtml += `
-                    <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: 350px;">
+                    <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: 380px;">
+                        <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #64748b; font-family: sans-serif;">
+                            FOTO #${i + 1}
+                        </div>
                         <div class="photo-img-box" style="width: 100%; height: 230px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e2e8f0;">
                             <img class="photo-img" src="${base64Data || ''}" alt="Evidencia" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
-                        <div class="photo-details" style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px;">
-                            <div class="photo-act-time" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 6px;">
-                                <span class="photo-act" style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo.actividad || 'GENERAL'}</span>
-                                <span class="photo-time" style="color: #64748b; font-size: 10px;">${dateStr} ${timeStr}</span>
-                            </div>
-                            <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-family: sans-serif;">${displayDesc}</p>
-                        </div>
+                        ${detailsHtml}
                     </div>
                 `;
             }
@@ -460,7 +475,7 @@ export const ExportScreen = {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Reporte de Evidencias - ${proj.name}</title>
+                    <title> </title>
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
                         @page {
@@ -494,7 +509,7 @@ export const ExportScreen = {
                         }
                         .header-title {
                             font-family: 'Space Grotesk', sans-serif;
-                            font-size: 18px;
+                            font-size: 16px;
                             font-weight: 700;
                             margin: 0;
                             color: #0f172a;
@@ -546,8 +561,8 @@ export const ExportScreen = {
                             ${logoHtml}
                         </div>
                         <div class="header-title-box">
-                            <h1 class="header-title">Reporte de Evidencias Fotográficas</h1>
-                            <p class="header-subtitle">Generado automáticamente por LogiStudio Workspace</p>
+                            <h1 class="header-title">Reporte de Evidencias Fotográficas - ${proj.name.toUpperCase()}</h1>
+                            <p class="header-subtitle">Generado automáticamente por LogiStudio</p>
                         </div>
                     </div>
                     
@@ -569,11 +584,11 @@ export const ExportScreen = {
                             <span style="font-weight: 600; color: #0f172a;">${this.reportPhotos.length}</span>
                         </div>
                     </div>
-
+ 
                     <div class="grid-photos">
                         ${photoCardsHtml}
                     </div>
-
+ 
                     <script>
                         window.onload = function() {
                             setTimeout(function() {
@@ -771,7 +786,7 @@ export const ExportScreen = {
             const htmlContent = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
                 <head>
-                    <title>Reporte de Obra - ${escapeHtml(proj.name)}</title>
+                    <title> </title>
                     <!--[if gte mso 9]>
                     <xml>
                         <w:WordDocument>
@@ -817,8 +832,8 @@ export const ExportScreen = {
                                         ${logoHtml}
                                     </td>
                                     <td align="right" style="vertical-align: bottom; font-family: Arial, sans-serif;">
-                                        <h1 style="font-size: 14pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas</h1>
-                                        <p style="font-size: 8pt; color: #64748b; margin: 2px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio Workspace</p>
+                                        <h1 style="font-size: 14pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas - ${escapeHtml(proj.name.toUpperCase())}</h1>
+                                        <p style="font-size: 8pt; color: #64748b; margin: 2px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio</p>
                                     </td>
                                 </tr>
                             </table>
