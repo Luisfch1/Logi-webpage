@@ -7,7 +7,13 @@ import { State } from '../../core/State.js';
 import { LogiNative } from '../../core/LogiNative.js';
 
 export const ExportScreen = {
+    assistantMode: false,
+    reportPhotos: [],
+
     getLayout() {
+        if (this.assistantMode) {
+            return this.getAssistantLayout();
+        }
         const proj = State.currentProject;
         const itemCount = State.items.length;
 
@@ -71,17 +77,17 @@ export const ExportScreen = {
                         </button>
                     </div>
 
-                    <!-- PDF -->
+                    <!-- PDF / Word Assistant -->
                     <div class="p-6 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-4 hover:border-rose-500/50 transition-all">
                         <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
                             <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">Informe PDF Imprimible</h3>
-                            <p class="text-xs text-white/40 mt-1">Genera documento maquetado con fotografías y metadatos de obra.</p>
+                            <h3 class="text-base font-bold text-white">Generador de Informes (PDF / Word)</h3>
+                            <p class="text-xs text-white/40 mt-1">Configura, previsualiza y edita la selección de evidencias antes de generar tu reporte PDF o Word editable.</p>
                         </div>
-                        <button id="btn-export-pdf" class="w-full py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs hover:bg-rose-400 transition-all">
-                            Generar PDF
+                        <button id="btn-start-assistant" class="w-full py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs hover:bg-rose-400 transition-all">
+                            Iniciar Asistente
                         </button>
                     </div>
 
@@ -104,6 +110,11 @@ export const ExportScreen = {
     },
 
     init() {
+        if (this.assistantMode) {
+            this.bindAssistantEvents();
+            return;
+        }
+
         // Inicializar inputs de fecha con valores por defecto
         const todayStr = new Date().toISOString().split('T')[0];
         const monthStr = new Date().toISOString().split('T')[0].substring(0, 7);
@@ -124,6 +135,11 @@ export const ExportScreen = {
     },
 
     bindEvents() {
+        if (this.assistantMode) {
+            this.bindAssistantEvents();
+            return;
+        }
+
         const selectMode = document.getElementById('export-select-mode');
         const boxDay = document.getElementById('export-date-day-box');
         const boxMonth = document.getElementById('export-date-month-box');
@@ -152,9 +168,23 @@ export const ExportScreen = {
             btnExcel.onclick = () => alert("Exportando datos a Excel...");
         }
 
-        const btnPdf = document.getElementById('btn-export-pdf');
-        if (btnPdf) {
-            btnPdf.onclick = () => this.exportPdf();
+        const btnStartAssistant = document.getElementById('btn-start-assistant');
+        if (btnStartAssistant) {
+            btnStartAssistant.onclick = () => {
+                const proj = State.currentProject;
+                if (!proj) {
+                    alert("No hay un proyecto activo seleccionado.");
+                    return;
+                }
+                const filtered = this.getFilteredPhotos();
+                if (filtered.length === 0) {
+                    alert("No hay evidencias que coincidan con los filtros de fecha seleccionados.");
+                    return;
+                }
+                this.reportPhotos = [...filtered];
+                this.assistantMode = true;
+                Architect.render('export');
+            };
         }
     },
 
@@ -194,23 +224,179 @@ export const ExportScreen = {
         return projectPhotos;
     },
 
-    async exportPdf() {
+    getAssistantLayout() {
+        const catalog = State.catalog || [];
+        
+        const photosGridHtml = this.reportPhotos.length === 0 ? `
+            <div class="p-16 border-2 border-dashed border-white/10 rounded-3xl text-center space-y-3 bg-black/20">
+                <span class="material-symbols-outlined text-4xl text-white/20">photo_library</span>
+                <p class="text-sm font-bold text-white/60">No hay fotos en este reporte</p>
+                <p class="text-xs text-white/40 max-w-sm mx-auto">Excluiste todas las fotos o el rango seleccionado no tiene evidencias. Vuelve atrás para reconfigurar.</p>
+            </div>
+        ` : `
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                ${this.reportPhotos.map((photo, index) => {
+                    const catalogItem = catalog.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
+                    const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                    const displayDesc = photo.descripcion || catalogDesc || 'Sin descripción';
+                    
+                    return `
+                        <div class="relative flex flex-col bg-[#0a0a0c] border border-white/10 rounded-xl overflow-hidden group hover:border-primary/30 transition-all h-[280px]">
+                            <!-- Header de Tarjeta (Número de Foto) -->
+                            <div class="flex justify-between items-center bg-black/40 px-3 py-1.5 border-b border-white/5 font-mono text-[10px] text-white/60">
+                                <span class="font-bold text-primary">FOTO #${index + 1}</span>
+                                <span>${photo.fechaStr || ''}</span>
+                            </div>
+
+                            <!-- Imagen -->
+                            <div class="relative flex-1 bg-black/20 overflow-hidden flex items-center justify-center">
+                                <img id="assistant-img-${photo.id}" class="w-full h-full object-cover lazy-assistant-thumb" data-id="${photo.id}" data-filename="${photo.filename}" src="${photo._tempImageSrc || ''}" alt="Evidencia" />
+                                
+                                <!-- Botón de Excluir Flotante (Se muestra al hacer Hover) -->
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center pointer-events-none">
+                                    <button class="btn-assistant-exclude px-3 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer pointer-events-auto active:scale-95 transition-all shadow-lg" data-index="${index}" title="Quitar de este reporte">
+                                        <span class="material-symbols-outlined text-xs">close</span>
+                                        <span>Excluir del Reporte</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Detalles de Pie de Tarjeta -->
+                            <div class="p-2.5 bg-black/20 border-t border-white/5 space-y-1 select-none">
+                                <div class="flex justify-between items-center gap-2">
+                                    <span class="text-[9px] font-mono font-bold bg-primary/20 text-primary border border-primary/20 px-1.5 py-0.5 rounded truncate max-w-[80px]">${photo.actividad || 'GENERAL'}</span>
+                                    <span class="text-[8px] font-mono text-white/40">${photo.timeStr || ''}</span>
+                                </div>
+                                <p class="text-[10px] text-white/70 truncate leading-tight font-body" title="${displayDesc}">${displayDesc}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        return `
+            <div class="flex flex-col h-full w-full overflow-hidden p-5 space-y-4">
+                <!-- Header del Asistente -->
+                <div class="flex justify-between items-center border-b border-white/10 pb-2.5 shrink-0">
+                    <div>
+                        <span class="text-[9px] font-bold font-headline uppercase tracking-widest text-primary">LogiStudio Report Wizard</span>
+                        <h1 class="text-xl font-bold font-headline text-white">Asistente de Configuración de Informe</h1>
+                    </div>
+                    
+                    <button id="btn-assistant-back" class="px-3.5 py-2 rounded-xl border border-white/15 text-white/80 hover:text-white bg-white/5 hover:bg-white/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        <span>Volver al Configurador</span>
+                    </button>
+                </div>
+
+                <!-- Barra de Acciones del Asistente -->
+                <div class="flex justify-between items-center bg-[#0a0a0c] border border-white/10 px-4 py-3 rounded-xl shrink-0 gap-4">
+                    <div class="flex items-center gap-2.5 font-mono text-xs text-white/60">
+                        <span class="material-symbols-outlined text-primary text-base">info</span>
+                        <span>Evidencias en reporte: <strong class="text-primary text-sm" id="txt-assistant-count">${this.reportPhotos.length}</strong></span>
+                        <span class="text-white/20">|</span>
+                        <span class="text-[10px]">Excluir fotos re-organiza y re-enumera todo automáticamente.</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button id="btn-assistant-pdf" class="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-base">picture_as_pdf</span>
+                            <span>Generar PDF Final</span>
+                        </button>
+                        
+                        <button id="btn-assistant-word" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-base">description</span>
+                            <span>Generar Word Editable</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista Editable de Evidencias (Scrollable) -->
+                <div class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
+                    ${photosGridHtml}
+                </div>
+            </div>
+        `;
+    },
+
+    bindAssistantEvents() {
+        const btnBack = document.getElementById('btn-assistant-back');
+        if (btnBack) {
+            btnBack.onclick = () => {
+                this.assistantMode = false;
+                Architect.render('export');
+            };
+        }
+
+        const btnPdf = document.getElementById('btn-assistant-pdf');
+        if (btnPdf) {
+            btnPdf.onclick = () => this.generatePdfFromAssistant();
+        }
+
+        const btnWord = document.getElementById('btn-assistant-word');
+        if (btnWord) {
+            btnWord.onclick = () => this.generateWordFromAssistant();
+        }
+
+        document.querySelectorAll('.btn-assistant-exclude').forEach(btn => {
+            btn.onclick = () => {
+                const index = parseInt(btn.dataset.index, 10);
+                if (!isNaN(index)) {
+                    this.reportPhotos.splice(index, 1);
+                    Architect.render('export');
+                }
+            };
+        });
+
+        const container = document.querySelector('.lazy-assistant-thumb')?.closest('.overflow-y-auto');
+        if (container) {
+            const lazyImages = container.querySelectorAll('.lazy-assistant-thumb');
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(async (entry) => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const id = img.dataset.id;
+                        const filename = img.dataset.filename;
+                        const it = this.reportPhotos.find(item => item.id === id);
+                        if (it) {
+                            if (it._tempImageSrc) {
+                                img.src = it._tempImageSrc;
+                            } else {
+                                const uri = await LogiNative.getBlobUri(filename);
+                                if (uri) {
+                                    it._tempImageSrc = uri;
+                                    img.src = uri;
+                                }
+                            }
+                        }
+                        obs.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '100px 0px 200px 0px',
+                threshold: 0.01
+            });
+
+            lazyImages.forEach(img => {
+                const id = img.dataset.id;
+                const it = this.reportPhotos.find(item => item.id === id);
+                if (it && it._tempImageSrc) {
+                    img.src = it._tempImageSrc;
+                } else {
+                    observer.observe(img);
+                }
+            });
+        }
+    },
+
+    async generatePdfFromAssistant() {
         const proj = State.currentProject;
-        if (!proj) {
-            alert("No hay un proyecto activo seleccionado.");
-            return;
-        }
+        if (!proj) return;
 
-        const filtered = this.getFilteredPhotos();
-        if (filtered.length === 0) {
-            alert("No hay evidencias que coincidan con los filtros de fecha seleccionados.");
+        if (this.reportPhotos.length === 0) {
+            alert("No hay fotos seleccionadas para exportar.");
             return;
-        }
-
-        if (filtered.length > 200) {
-            if (!confirm(`Vas a generar un reporte PDF con ${filtered.length} evidencias. Esto puede tomar unos momentos y consumir recursos. ¿Deseas continuar?`)) {
-                return;
-            }
         }
 
         window.showLoader("Generando Reporte", "Cargando metadatos y fotos de IndexedDB...");
@@ -224,8 +410,8 @@ export const ExportScreen = {
             `;
 
             let photoCardsHtml = '';
-            for (let i = 0; i < filtered.length; i++) {
-                const photo = filtered[i];
+            for (let i = 0; i < this.reportPhotos.length; i++) {
+                const photo = this.reportPhotos[i];
                 const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
                 
                 const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
@@ -321,7 +507,7 @@ export const ExportScreen = {
                         }
                         .meta-grid {
                             display: grid;
-                            grid-template-cols: repeat(4, 1fr);
+                            grid-template-columns: repeat(4, 1fr);
                             gap: 12px;
                             background: #f8fafc;
                             border: 1px solid #e2e8f0;
@@ -340,7 +526,7 @@ export const ExportScreen = {
                         }
                         .grid-photos {
                             display: grid;
-                            grid-template-cols: 1fr 1fr;
+                            grid-template-columns: 1fr 1fr;
                             gap: 20px;
                         }
                         @media print {
@@ -379,7 +565,7 @@ export const ExportScreen = {
                         </div>
                         <div class="meta-item">
                             <strong>Total Evidencias</strong>
-                            <span style="font-weight: 600; color: #0f172a;">${filtered.length}</span>
+                            <span style="font-weight: 600; color: #0f172a;">${this.reportPhotos.length}</span>
                         </div>
                     </div>
 
@@ -401,6 +587,140 @@ export const ExportScreen = {
         } catch (err) {
             console.error("[ExportScreen] Error al generar PDF:", err);
             alert("Error al generar el PDF: " + err.message);
+        } finally {
+            window.hideLoader();
+        }
+    },
+
+    async generateWordFromAssistant() {
+        const proj = State.currentProject;
+        if (!proj) return;
+
+        if (this.reportPhotos.length === 0) {
+            alert("No hay fotos seleccionadas para exportar.");
+            return;
+        }
+
+        window.showLoader("Generando Word", "Construyendo documento editable...");
+
+        try {
+            const logoB64 = await LogiNative.getLogo();
+            const logoHtml = logoB64 ? `<img src="${logoB64}" width="120" style="object-fit:contain;" />` : `
+                <div style="font-family: Arial, sans-serif; font-weight: bold; font-size: 20px; color: #000;">
+                    LOGISTUDIO
+                </div>
+            `;
+
+            const reportDate = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            let rowsHtml = '';
+            for (let i = 0; i < this.reportPhotos.length; i++) {
+                const photo = this.reportPhotos[i];
+                const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
+                
+                const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
+                const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                const displayDesc = photo.descripcion || catalogDesc || 'Sin descripción';
+                const timeStr = photo.timeStr || new Date(photo.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const dateStr = photo.fechaStr || new Date(photo.createdAt).toLocaleDateString('es-ES');
+
+                rowsHtml += `
+                    <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; margin-bottom: 25px; font-family: Calibri, Arial, sans-serif;">
+                        <tr style="background-color: #f8fafc;">
+                            <td colspan="2" style="font-size: 11pt; font-weight: bold; color: #1e293b; padding: 8px 12px; border-bottom: 2px solid #cbd5e1;">
+                                FOTO #${i + 1}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 45%; text-align: center; vertical-align: middle; padding: 10px; border: 1px solid #cbd5e1;">
+                                <img src="${base64Data || ''}" width="280" height="190" style="display:block; margin: 0 auto; object-fit: cover;" />
+                            </td>
+                            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.5; color: #334155; padding: 12px; border: 1px solid #cbd5e1;">
+                                <p style="margin: 0 0 8px 0;"><strong>ÍTEM / ACTIVIDAD:</strong> <span style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 9pt;">${photo.actividad || 'GENERAL'}</span></p>
+                                <p style="margin: 0 0 8px 0;"><strong>FECHA/HORA:</strong> ${dateStr} ${timeStr}</p>
+                                <p style="margin: 0 0 8px 0;"><strong>DESCRIPCIÓN TÉCNICA:</strong></p>
+                                <p style="margin: 0; color: #0f172a; line-height: 1.4; white-space: pre-wrap;">${displayDesc}</p>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+            }
+
+            const docContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <title>Reporte de Obra - ${proj.name}</title>
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <w:WordDocument>
+                            <w:View>Print</w:View>
+                            <w:Zoom>100</w:Zoom>
+                            <w:DoNotOptimizeForBrowser/>
+                        </w:WordDocument>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        body {
+                            font-family: Calibri, Arial, sans-serif;
+                            margin: 1.5cm;
+                            color: #1e293b;
+                        }
+                        p {
+                            margin: 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width:100%; border-bottom: 2px solid #cafd00; padding-bottom: 12px; margin-bottom: 25px;">
+                        <tr>
+                            <td>
+                                ${logoHtml}
+                            </td>
+                            <td style="text-align: right; font-family: Arial, sans-serif; vertical-align: bottom;">
+                                <h1 style="font-size: 16pt; margin: 0; text-transform: uppercase; color: #0f172a;">Reporte de Evidencias Fotográficas</h1>
+                                <p style="font-size: 9pt; color: #64748b; margin: 3px 0 0 0;">Generado por LogiStudio Workspace</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; font-size: 10pt; margin-bottom: 30px; background-color: #f8fafc;">
+                        <tr>
+                            <td style="width: 25%; border:1px solid #cbd5e1;"><strong>PROYECTO:</strong></td>
+                            <td style="width: 25%; border:1px solid #cbd5e1; color: #0f172a; text-transform: uppercase;"><strong>${proj.name}</strong></td>
+                            <td style="width: 25%; border:1px solid #cbd5e1;"><strong>FECHA DE REPORTE:</strong></td>
+                            <td style="width: 25%; border:1px solid #cbd5e1;">${reportDate}</td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #cbd5e1;"><strong>TOTAL EVIDENCIAS:</strong></td>
+                            <td style="border:1px solid #cbd5e1; color: #0f172a;"><strong>${this.reportPhotos.length}</strong></td>
+                            <td style="border:1px solid #cbd5e1;"><strong>ORIGEN:</strong></td>
+                            <td style="border:1px solid #cbd5e1;">LogiStudio Desktop Suite</td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 20px;">
+                        ${rowsHtml}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + docContent], {
+                type: 'application/msword;charset=utf-8'
+            });
+
+            const cleanProjName = proj.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const filename = `reporte_${cleanProjName}_${new Date().toISOString().slice(0, 10)}.doc`;
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("[ExportScreen] Error al generar Word:", err);
+            alert("Error al exportar Word: " + err.message);
         } finally {
             window.hideLoader();
         }

@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     State.subscribe((state, changeType) => {
         if (changeType === 'tab') {
+            ExportScreen.assistantMode = false;
+            ExportScreen.reportPhotos = [];
             renderSidebar();
             Architect.render(state.currentTab);
         }
