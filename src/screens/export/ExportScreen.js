@@ -405,8 +405,8 @@ export const ExportScreen = {
         try {
             const logoB64 = await LogiNative.getLogo();
             const logoHtml = logoB64 ? `<img class="header-logo" src="${logoB64}" alt="Logo" />` : `
-                <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 22px; color: #000; display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--primary, #cafd00); text-shadow: 0 0 2px rgba(0,0,0,0.2)">L</span>OGI<span style="color: var(--primary, #cafd00)">STUDIO</span>
+                <div style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 22px; color: #000; letter-spacing: -0.5px;">
+                    <span style="color: #cafd00;">L</span>OGI<span style="color: #cafd00; margin-left: 2px;">STUDIO</span>
                 </div>
             `;
 
@@ -433,15 +433,15 @@ export const ExportScreen = {
                                 </div>
                             ` : ''}
                             ${hasDesc ? `
-                                <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-family: sans-serif;">${displayDesc}</p>
+                                <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-family: Arial, Helvetica, sans-serif;">${displayDesc}</p>
                             ` : ''}
                         </div>
                     `;
                 }
 
                 photoCardsHtml += `
-                    <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: 380px;">
-                        <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #64748b; font-family: sans-serif;">
+                    <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: auto;">
+                        <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #64748b; font-family: Arial, Helvetica, sans-serif;">
                             FOTO #${i + 1}
                         </div>
                         <div class="photo-img-box" style="width: 100%; height: 230px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e2e8f0;">
@@ -477,13 +477,12 @@ export const ExportScreen = {
                 <head>
                     <title> </title>
                     <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
                         @page {
                             size: A4;
                             margin: 15mm;
                         }
                         body {
-                            font-family: 'Inter', sans-serif;
+                            font-family: Arial, Helvetica, sans-serif;
                             color: #1e293b;
                             margin: 0;
                             padding: 0;
@@ -508,7 +507,7 @@ export const ExportScreen = {
                             text-align: right;
                         }
                         .header-title {
-                            font-family: 'Space Grotesk', sans-serif;
+                            font-family: Arial, Helvetica, sans-serif;
                             font-size: 16px;
                             font-weight: 700;
                             margin: 0;
