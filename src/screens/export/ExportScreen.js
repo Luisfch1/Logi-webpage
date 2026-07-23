@@ -650,12 +650,12 @@ export const ExportScreen = {
                 filterText = `Rango (${document.getElementById('export-date-start')?.value || ''} al ${document.getElementById('export-date-end')?.value || ''})`;
             }
 
-            // Agrupar fotos en pares para maquetar 2 columnas nativas en una sola tabla en Word
+            // Agrupar fotos en pares para maquetar 2 columnas nativas en una sola tabla en Word (sin tablas anidadas)
             let rowsHtml = '';
             const photoEmbeds = [];
 
-            const renderCard = async (photo, num) => {
-                if (!photo) return '';
+            const registerPhoto = async (photo) => {
+                if (!photo) return;
                 const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
                 if (base64Data) {
                     const rawBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
@@ -666,64 +666,104 @@ export const ExportScreen = {
                         data: rawBase64
                     });
                 }
-                
-                const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
-                const catalogDesc = catalogItem ? catalogItem.descripcion : '';
-                const displayDesc = photo.descripcion || catalogDesc || '';
-
-                const hasActivity = !!photo.actividad;
-                const hasDescription = !!displayDesc;
-
-                let detailsHtml = '';
-                if (hasActivity || hasDescription) {
-                    detailsHtml = `
-                        <tr>
-                            <td style="padding: 12px; font-size: 9pt; border-top: 1px solid #cbd5e1;">
-                                ${hasActivity ? `
-                                    <div style="margin-bottom: 6px;">
-                                        <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo.actividad)}</span>
-                                    </div>
-                                ` : ''}
-                                ${hasDescription ? `
-                                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${escapeHtml(displayDesc)}</p>
-                                ` : ''}
-                            </td>
-                        </tr>
-                    `;
-                }
-
-                return `
-                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; background-color: #ffffff; font-family: Calibri, Arial, sans-serif;">
-                        <tr>
-                            <td style="background-color: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 6px 12px; font-size: 9pt; font-weight: bold; color: #64748b;">
-                                FOTO #${num}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" style="background-color: #ffffff; padding: 0; height: 190px; vertical-align: middle;">
-                                <img src="cid:photo_${photo.id}" width="280" height="190" style="display: block; width: 100%; height: auto; max-height: 190px; object-fit: cover;" />
-                            </td>
-                        </tr>
-                        ${detailsHtml}
-                    </table>
-                `;
             };
 
             for (let i = 0; i < this.reportPhotos.length; i += 2) {
                 const photo1 = this.reportPhotos[i];
                 const photo2 = this.reportPhotos[i + 1];
 
-                const card1Html = await renderCard(photo1, i + 1);
-                const card2Html = photo2 ? await renderCard(photo2, i + 2) : '';
+                await registerPhoto(photo1);
+                if (photo2) {
+                    await registerPhoto(photo2);
+                }
+
+                const card1Num = i + 1;
+                const card2Num = i + 2;
+
+                // Photo 1 Details
+                const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
+                const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
+                const hasAct1 = !!photo1.actividad;
+                const hasDesc1 = !!displayDesc1;
+
+                // Photo 2 Details
+                let hasAct2 = false;
+                let hasDesc2 = false;
+                let displayDesc2 = '';
+                if (photo2) {
+                    const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                    const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
+                    displayDesc2 = photo2.descripcion || catalogDesc2 || '';
+                    hasAct2 = !!photo2.actividad;
+                    hasDesc2 = !!displayDesc2;
+                }
+
+                // 1. Fila de Cabecera (FOTO #num)
+                rowsHtml += `
+                    <tr>
+                        <td style="width: 48%; background-color: #f8fafc; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                            FOTO #${card1Num}
+                        </td>
+                        <td style="width: 4%;"></td>
+                        <td style="width: 48%; background-color: ${photo2 ? '#f8fafc' : 'transparent'}; border-top: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                            ${photo2 ? `FOTO #${card2Num}` : ''}
+                        </td>
+                    </tr>
+                `;
+
+                // 2. Fila de Imagen
+                rowsHtml += `
+                    <tr>
+                        <td align="center" style="width: 48%; background-color: #ffffff; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 10px; vertical-align: middle;">
+                            <img src="cid:photo_${photo1.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
+                        </td>
+                        <td style="width: 4%;"></td>
+                        <td align="center" style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 10px; vertical-align: middle;">
+                            ${photo2 ? `<img src="cid:photo_${photo2.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />` : ''}
+                        </td>
+                    </tr>
+                `;
+
+                // 3. Fila de Detalles
+                const borderBottom1 = '1px solid #cbd5e1';
+                const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
+
+                const detailsContent1 = (hasAct1 || hasDesc1) ? `
+                    ${hasAct1 ? `
+                        <div style="margin-bottom: 6px;">
+                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
+                        </div>
+                    ` : ''}
+                    ${hasDesc1 ? `
+                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${escapeHtml(displayDesc1)}</p>
+                    ` : ''}
+                ` : '';
+
+                const detailsContent2 = (photo2 && (hasAct2 || hasDesc2)) ? `
+                    ${hasAct2 ? `
+                        <div style="margin-bottom: 6px;">
+                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
+                        </div>
+                    ` : ''}
+                    ${hasDesc2 ? `
+                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${escapeHtml(displayDesc2)}</p>
+                    ` : ''}
+                ` : '';
 
                 rowsHtml += `
                     <tr>
-                        <td style="width: 48%; vertical-align: top; padding-right: 2%; padding-bottom: 15px;">
-                            ${card1Html}
+                        <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: ${hasAct1 || hasDesc1 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                            ${detailsContent1}
                         </td>
-                        <td style="width: 48%; vertical-align: top; padding-left: 2%; padding-bottom: 15px;">
-                            ${card2Html}
+                        <td style="width: 4%;"></td>
+                        <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 && (hasAct2 || hasDesc2) ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                            ${detailsContent2}
                         </td>
+                    </tr>
+                    <!-- Fila de Espaciado -->
+                    <tr style="height: 15px;">
+                        <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
                     </tr>
                 `;
             }
