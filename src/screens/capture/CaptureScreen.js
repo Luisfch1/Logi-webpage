@@ -79,6 +79,11 @@ export const CaptureScreen = {
                             </button>
                         </div>
 
+                        <button id="btn-import-json-gallery" class="px-3.5 py-2.5 rounded-xl border border-white/10 text-white bg-white/5 hover:bg-white/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer mr-1" title="Importar evidencias y metadatos de sincronización .json">
+                            <span class="material-symbols-outlined text-base">cloud_download</span>
+                            <span>Importar JSON</span>
+                        </button>
+
                         <button id="btn-desktop-upload" class="px-3.5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-base">upload_file</span>
                             <span>Cargar Fotos de Galería</span>
@@ -181,6 +186,27 @@ export const CaptureScreen = {
                 if (searchInput) searchInput.value = '';
                 btnClearSearch.classList.add('hidden');
                 this.renderGrid();
+            };
+        }
+
+        const btnImportJson = document.getElementById('btn-import-json-gallery');
+        if (btnImportJson) {
+            btnImportJson.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        window.showLoader("Importando Sincro JSON", `Procesando actividades e imágenes del archivo "${file.name}"...`);
+                        try {
+                            await ProjectFileManager.importControlJson(file);
+                        } finally {
+                            window.hideLoader();
+                        }
+                    }
+                };
+                input.click();
             };
         }
 
@@ -497,7 +523,7 @@ export const CaptureScreen = {
                             return `
                                 <div class="relative aspect-video bg-[#0a0a0c] border border-white/10 rounded-xl overflow-hidden group cursor-pointer transition-all hover:border-primary/50 btn-select-card ${isSelected ? 'ring-2 ring-primary border-primary' : ''}" data-id="${it.id}">
                                     <!-- Imagen -->
-                                    <img id="img-${it.id}" class="w-full h-full object-cover select-none pointer-events-none" src="${it._tempImageSrc || ''}" alt="Evidencia" />
+                                    <img id="img-${it.id}" class="w-full h-full object-cover select-none pointer-events-none lazy-thumb" data-id="${it.id}" data-filename="${it.filename}" src="${it._tempImageSrc || ''}" alt="Evidencia" />
 
                                     <!-- Degradado Base y Detalles -->
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-between p-3 select-none pointer-events-none z-10">
@@ -668,15 +694,41 @@ export const CaptureScreen = {
             };
         });
 
-        // 5. Cargar Miniaturas Asincrónicas de IndexedDB
-        items.forEach(async (it) => {
-            if (!it._tempImageSrc) {
-                const uri = await LogiNative.getBlobUri(it.filename);
-                if (uri) {
-                    it._tempImageSrc = uri;
-                    const img = document.getElementById(`img-${it.id}`);
-                    if (img) img.src = uri;
+        // 5. Cargar Miniaturas Asincrónicas de IndexedDB con Lazy Loading (IntersectionObserver)
+        const lazyImages = container.querySelectorAll('.lazy-thumb');
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(async (entry) => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const id = img.dataset.id;
+                    const filename = img.dataset.filename;
+                    const it = items.find(item => item.id === id);
+                    if (it) {
+                        if (it._tempImageSrc) {
+                            img.src = it._tempImageSrc;
+                        } else {
+                            const uri = await LogiNative.getBlobUri(filename);
+                            if (uri) {
+                                it._tempImageSrc = uri;
+                                img.src = uri;
+                            }
+                        }
+                    }
+                    obs.unobserve(img);
                 }
+            });
+        }, {
+            rootMargin: '150px 0px 300px 0px',
+            threshold: 0.01
+        });
+
+        lazyImages.forEach(img => {
+            const id = img.dataset.id;
+            const it = items.find(item => item.id === id);
+            if (it && it._tempImageSrc) {
+                img.src = it._tempImageSrc;
+            } else {
+                observer.observe(img);
             }
         });
 

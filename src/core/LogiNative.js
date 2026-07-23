@@ -149,19 +149,7 @@ export const LogiNative = {
             let candidateIdx = 0;
             const tryNext = () => {
                 if (candidateIdx >= candidates.length) {
-                    const allKeysReq = store.getAllKeys();
-                    allKeysReq.onsuccess = () => {
-                        const keys = allKeysReq.result || [];
-                        const matchedKey = keys.find(k => typeof k === 'string' && rawId && k.includes(rawId));
-                        if (matchedKey) {
-                            const finalReq = store.get(matchedKey);
-                            finalReq.onsuccess = () => r(finalReq.result || null);
-                            finalReq.onerror = () => r(null);
-                        } else {
-                            r(null);
-                        }
-                    };
-                    allKeysReq.onerror = () => r(null);
+                    r(null);
                     return;
                 }
 

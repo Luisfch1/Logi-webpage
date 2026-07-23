@@ -50,7 +50,7 @@ export const SidebarNav = {
 
                     <!-- Menú de Navegación Panorámico de Escritorio -->
                     <nav class="space-y-1.5">
-                        ${navItem('projects', 'folder_open', 'Gestión de Proyectos')}
+                        ${navItem('projects', 'folder_open', 'Proyectos')}
                         ${navItem('capture', 'photo_camera', 'Galería')}
                         ${navItem('export', 'output', 'Exportar PDF / Excel')}
                         ${navItem('settings', 'settings', 'Configuración')}
