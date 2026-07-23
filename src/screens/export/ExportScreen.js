@@ -605,8 +605,11 @@ export const ExportScreen = {
         window.showLoader("Generando Word", "Construyendo documento editable...");
 
         try {
+            const boundary = "----=_NextPart_LogiStudio_Workspace_Boundary";
             const logoB64 = await LogiNative.getLogo();
-            const logoHtml = logoB64 ? `<img src="${logoB64}" width="120" style="object-fit:contain;" />` : `
+            
+            const hasLogo = !!logoB64;
+            const logoHtml = hasLogo ? `<img src="cid:logo" width="120" style="object-fit:contain;" />` : `
                 <div style="font-family: Arial, sans-serif; font-weight: bold; font-size: 20px; color: #000;">
                     LOGISTUDIO
                 </div>
@@ -627,13 +630,24 @@ export const ExportScreen = {
 
             // Agrupar fotos en pares para maquetar 2 columnas nativas en Word
             let rowsHtml = '';
+            const photoEmbeds = [];
+
             for (let i = 0; i < this.reportPhotos.length; i += 2) {
                 const photo1 = this.reportPhotos[i];
                 const photo2 = this.reportPhotos[i + 1];
 
-                const renderCard = async (photo, num) => {
+                const renderCard = async (photo) => {
                     if (!photo) return '';
                     const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
+                    if (base64Data) {
+                        const rawBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
+                        const mimeType = base64Data.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
+                        photoEmbeds.push({
+                            cid: `photo_${photo.id}`,
+                            mime: mimeType,
+                            data: rawBase64
+                        });
+                    }
                     
                     const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
                     const catalogDesc = catalogItem ? catalogItem.descripcion : '';
@@ -645,7 +659,7 @@ export const ExportScreen = {
                         <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background-color: #ffffff; margin-bottom: 15px; font-family: Calibri, Arial, sans-serif;">
                             <tr>
                                 <td align="center" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0; height: 190px; vertical-align: middle;">
-                                    <img src="${base64Data || ''}" width="280" height="190" style="display: block; width: 100%; height: auto; max-height: 190px; object-fit: cover;" />
+                                    <img src="cid:photo_${photo.id}" width="280" height="190" style="display: block; width: 100%; height: auto; max-height: 190px; object-fit: cover;" />
                                 </td>
                             </tr>
                             <tr>
@@ -669,8 +683,8 @@ export const ExportScreen = {
                     `;
                 };
 
-                const card1Html = await renderCard(photo1, i + 1);
-                const card2Html = photo2 ? await renderCard(photo2, i + 2) : '';
+                const card1Html = await renderCard(photo1);
+                const card2Html = photo2 ? await renderCard(photo2) : '';
 
                 rowsHtml += `
                     <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
@@ -686,7 +700,7 @@ export const ExportScreen = {
                 `;
             }
 
-            const docContent = `
+            const htmlContent = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
                 <head>
                     <title>Reporte de Obra - ${proj.name}</title>
@@ -751,7 +765,46 @@ export const ExportScreen = {
                 </html>
             `;
 
-            const blob = new Blob(['\ufeff' + docContent], {
+            // Construir el documento en formato MHTML
+            let mhtmlParts = [];
+            
+            // Parte 1: Cabeceras MHTML
+            mhtmlParts.push("MIME-Version: 1.0\r\n");
+            mhtmlParts.push(`Content-Type: multipart/related; boundary="${boundary}"\r\n\r\n`);
+
+            // Parte 2: Contenido HTML
+            mhtmlParts.push(`--${boundary}\r\n`);
+            mhtmlParts.push("Content-Type: text/html; charset=\"utf-8\"\r\n");
+            mhtmlParts.push("Content-Transfer-Encoding: 8bit\r\n\r\n");
+            mhtmlParts.push(htmlContent.trim() + "\r\n\r\n");
+
+            // Parte 3: Incrustar Logo (si existe)
+            if (hasLogo) {
+                const logoRaw = logoB64.replace(/^data:image\/[a-z]+;base64,/, '');
+                const logoMime = logoB64.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
+                mhtmlParts.push(`--${boundary}\r\n`);
+                mhtmlParts.push(`Content-Type: ${logoMime}\r\n`);
+                mhtmlParts.push("Content-Transfer-Encoding: base64\r\n");
+                mhtmlParts.push("Content-ID: <logo>\r\n\r\n");
+                mhtmlParts.push(logoRaw + "\r\n\r\n");
+            }
+
+            // Parte 4: Incrustar fotos
+            for (const embed of photoEmbeds) {
+                mhtmlParts.push(`--${boundary}\r\n`);
+                mhtmlParts.push(`Content-Type: ${embed.mime}\r\n`);
+                mhtmlParts.push("Content-Transfer-Encoding: base64\r\n");
+                mhtmlParts.push(`Content-ID: <${embed.cid}>\r\n\r\n`);
+                mhtmlParts.push(embed.data + "\r\n\r\n");
+            }
+
+            // Parte 5: Fin MHTML
+            mhtmlParts.push(`--${boundary}--\r\n`);
+
+            const mhtmlContent = mhtmlParts.join("");
+
+            // Guardar como Blob usando la extensión .doc
+            const blob = new Blob([mhtmlContent], {
                 type: 'application/msword;charset=utf-8'
             });
 
