@@ -614,33 +614,72 @@ export const ExportScreen = {
 
             const reportDate = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+            const selectMode = document.getElementById('export-select-mode');
+            const mode = selectMode ? selectMode.value : 'todo';
+            let filterText = 'Todo el Proyecto';
+            if (mode === 'dia') {
+                filterText = `Día específico (${document.getElementById('export-date-day')?.value || ''})`;
+            } else if (mode === 'mes') {
+                filterText = `Mes específico (${document.getElementById('export-date-month')?.value || ''})`;
+            } else if (mode === 'rango') {
+                filterText = `Rango (${document.getElementById('export-date-start')?.value || ''} al ${document.getElementById('export-date-end')?.value || ''})`;
+            }
+
+            // Agrupar fotos en pares para maquetar 2 columnas nativas en Word
             let rowsHtml = '';
-            for (let i = 0; i < this.reportPhotos.length; i++) {
-                const photo = this.reportPhotos[i];
-                const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
-                
-                const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
-                const catalogDesc = catalogItem ? catalogItem.descripcion : '';
-                const displayDesc = photo.descripcion || catalogDesc || 'Sin descripción';
-                const timeStr = photo.timeStr || new Date(photo.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const dateStr = photo.fechaStr || new Date(photo.createdAt).toLocaleDateString('es-ES');
+            for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                const photo1 = this.reportPhotos[i];
+                const photo2 = this.reportPhotos[i + 1];
+
+                const renderCard = async (photo, num) => {
+                    if (!photo) return '';
+                    const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
+                    
+                    const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
+                    const catalogDesc = catalogItem ? catalogItem.descripcion : '';
+                    const displayDesc = photo.descripcion || catalogDesc || 'Sin descripción';
+                    const timeStr = photo.timeStr || new Date(photo.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const dateStr = photo.fechaStr || new Date(photo.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+
+                    return `
+                        <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background-color: #ffffff; margin-bottom: 15px; font-family: Calibri, Arial, sans-serif;">
+                            <tr>
+                                <td align="center" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0; height: 190px; vertical-align: middle;">
+                                    <img src="${base64Data || ''}" width="280" height="190" style="display: block; width: 100%; height: auto; max-height: 190px; object-fit: cover;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; font-size: 9pt;">
+                                    <!-- Tag y Fecha/Hora -->
+                                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                        <tr>
+                                            <td style="padding-bottom: 6px;">
+                                                <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${photo.actividad || 'GENERAL'}</span>
+                                            </td>
+                                            <td align="right" style="padding-bottom: 6px; color: #64748b; font-size: 8pt;">
+                                                ${dateStr} ${timeStr}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- Descripción -->
+                                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${displayDesc}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    `;
+                };
+
+                const card1Html = await renderCard(photo1, i + 1);
+                const card2Html = photo2 ? await renderCard(photo2, i + 2) : '';
 
                 rowsHtml += `
-                    <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; margin-bottom: 25px; font-family: Calibri, Arial, sans-serif;">
-                        <tr style="background-color: #f8fafc;">
-                            <td colspan="2" style="font-size: 11pt; font-weight: bold; color: #1e293b; padding: 8px 12px; border-bottom: 2px solid #cbd5e1;">
-                                FOTO #${i + 1}
-                            </td>
-                        </tr>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                         <tr>
-                            <td style="width: 45%; text-align: center; vertical-align: middle; padding: 10px; border: 1px solid #cbd5e1;">
-                                <img src="${base64Data || ''}" width="280" height="190" style="display:block; margin: 0 auto; object-fit: cover;" />
+                            <td style="width: 48%; vertical-align: top; padding-right: 2%;">
+                                ${card1Html}
                             </td>
-                            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.5; color: #334155; padding: 12px; border: 1px solid #cbd5e1;">
-                                <p style="margin: 0 0 8px 0;"><strong>ÍTEM / ACTIVIDAD:</strong> <span style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 9pt;">${photo.actividad || 'GENERAL'}</span></p>
-                                <p style="margin: 0 0 8px 0;"><strong>FECHA/HORA:</strong> ${dateStr} ${timeStr}</p>
-                                <p style="margin: 0 0 8px 0;"><strong>DESCRIPCIÓN TÉCNICA:</strong></p>
-                                <p style="margin: 0; color: #0f172a; line-height: 1.4; white-space: pre-wrap;">${displayDesc}</p>
+                            <td style="width: 48%; vertical-align: top; padding-left: 2%;">
+                                ${card2Html}
                             </td>
                         </tr>
                     </table>
@@ -678,24 +717,30 @@ export const ExportScreen = {
                                 ${logoHtml}
                             </td>
                             <td style="text-align: right; font-family: Arial, sans-serif; vertical-align: bottom;">
-                                <h1 style="font-size: 16pt; margin: 0; text-transform: uppercase; color: #0f172a;">Reporte de Evidencias Fotográficas</h1>
-                                <p style="font-size: 9pt; color: #64748b; margin: 3px 0 0 0;">Generado por LogiStudio Workspace</p>
+                                <h1 style="font-size: 16pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotográficas</h1>
+                                <p style="font-size: 9pt; color: #64748b; margin: 3px 0 0 0;">Generado automáticamente por LogiStudio Workspace</p>
                             </td>
                         </tr>
                     </table>
 
-                    <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; font-size: 10pt; margin-bottom: 30px; background-color: #f8fafc;">
+                    <table border="0" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; background-color: #f8fafc; border-radius: 8px; font-family: Calibri, Arial, sans-serif; font-size: 10pt; margin-bottom: 25px;">
                         <tr>
-                            <td style="width: 25%; border:1px solid #cbd5e1;"><strong>PROYECTO:</strong></td>
-                            <td style="width: 25%; border:1px solid #cbd5e1; color: #0f172a; text-transform: uppercase;"><strong>${proj.name}</strong></td>
-                            <td style="width: 25%; border:1px solid #cbd5e1;"><strong>FECHA DE REPORTE:</strong></td>
-                            <td style="width: 25%; border:1px solid #cbd5e1;">${reportDate}</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #cbd5e1;"><strong>TOTAL EVIDENCIAS:</strong></td>
-                            <td style="border:1px solid #cbd5e1; color: #0f172a;"><strong>${this.reportPhotos.length}</strong></td>
-                            <td style="border:1px solid #cbd5e1;"><strong>ORIGEN:</strong></td>
-                            <td style="border:1px solid #cbd5e1;">LogiStudio Desktop Suite</td>
+                            <td style="width: 25%; vertical-align: top; padding: 10px;">
+                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Proyecto</strong>
+                                <span style="font-weight: bold; color: #0f172a; text-transform: uppercase;">${proj.name}</span>
+                            </td>
+                            <td style="width: 25%; vertical-align: top; padding: 10px;">
+                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Fecha de Reporte</strong>
+                                <span style="color: #0f172a;">${reportDate}</span>
+                            </td>
+                            <td style="width: 25%; vertical-align: top; padding: 10px;">
+                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Filtro Aplicado</strong>
+                                <span style="color: #0f172a;">${filterText}</span>
+                            </td>
+                            <td style="width: 25%; vertical-align: top; padding: 10px;">
+                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Total Evidencias</strong>
+                                <span style="font-weight: bold; color: #0f172a;">${this.reportPhotos.length}</span>
+                            </td>
                         </tr>
                     </table>
 
