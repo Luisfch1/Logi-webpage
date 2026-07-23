@@ -684,7 +684,9 @@ export const ExportScreen = {
                 const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
                 const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
                 const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
-                const hasAct1 = !!photo1.actividad;
+                
+                const isGeneral1 = !photo1.actividad || String(photo1.actividad).trim().toUpperCase() === 'GENERAL';
+                const hasAct1 = !isGeneral1;
                 const hasDesc1 = !!displayDesc1;
 
                 // Photo 2 Details
@@ -695,7 +697,9 @@ export const ExportScreen = {
                     const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
                     const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
                     displayDesc2 = photo2.descripcion || catalogDesc2 || '';
-                    hasAct2 = !!photo2.actividad;
+                    
+                    const isGeneral2 = !photo2.actividad || String(photo2.actividad).trim().toUpperCase() === 'GENERAL';
+                    hasAct2 = !isGeneral2;
                     hasDesc2 = !!displayDesc2;
                 }
 
@@ -782,54 +786,88 @@ export const ExportScreen = {
                     </xml>
                     <![endif]-->
                     <style>
+                        @page Section1 {
+                            size: 8.5in 11.0in;
+                            margin: 1.0in 1.0in 1.0in 1.0in;
+                            mso-header-margin: 0.5in;
+                            mso-header: h1;
+                            mso-paper-source: 0;
+                        }
+                        div.Section1 {
+                            page: Section1;
+                        }
                         body {
                             font-family: Calibri, Arial, sans-serif;
-                            margin: 1.5cm;
                             color: #1e293b;
                         }
                         p {
                             margin: 0;
                         }
+                        p.MsoHeader, li.MsoHeader, div.MsoHeader {
+                            margin: 0in;
+                            margin-bottom: .0001pt;
+                            mso-pagination: widow-orphan;
+                            tab-stops: center 3.0in right 6.0in;
+                        }
                     </style>
                 </head>
                 <body>
-                    <table border="0" cellpadding="0" cellspacing="0" style="width:100%; border-bottom: 2px solid #cafd00; padding-bottom: 12px; margin-bottom: 25px;">
-                        <tr>
-                            <td>
-                                ${logoHtml}
-                            </td>
-                            <td style="text-align: right; font-family: Arial, sans-serif; vertical-align: bottom;">
-                                <h1 style="font-size: 16pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas</h1>
-                                <p style="font-size: 9pt; color: #64748b; margin: 3px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio Workspace</p>
-                            </td>
-                        </tr>
-                    </table>
+                    <div class="Section1">
+                        <!-- NATIVE HEADER CONTAINER -->
+                        <div style="mso-element: header;" id="h1">
+                            <p class="MsoHeader">
+                                <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #cafd00; padding-bottom: 8px; font-family: Calibri, Arial, sans-serif;">
+                                    <tr>
+                                        <td style="vertical-align: middle; width: 120px;">
+                                            ${logoHtml}
+                                        </td>
+                                        <td align="right" style="vertical-align: bottom; font-family: Arial, sans-serif;">
+                                            <h1 style="font-size: 14pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas</h1>
+                                            <p style="font-size: 8pt; color: #64748b; margin: 2px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio Workspace</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </p>
+                        </div>
 
-                    <table border="0" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; background-color: #f8fafc; border-radius: 8px; font-family: Calibri, Arial, sans-serif; font-size: 10pt; margin-bottom: 25px;">
-                        <tr>
-                            <td style="width: 25%; vertical-align: top; padding: 10px;">
-                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Proyecto</strong>
-                                <span style="font-weight: bold; color: #0f172a; text-transform: uppercase;">${escapeHtml(proj.name)}</span>
-                            </td>
-                            <td style="width: 25%; vertical-align: top; padding: 10px;">
-                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Fecha de Reporte</strong>
-                                <span style="color: #0f172a;">${escapeHtml(reportDate)}</span>
-                            </td>
-                            <td style="width: 25%; vertical-align: top; padding: 10px;">
-                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Filtro Aplicado</strong>
-                                <span style="color: #0f172a;">${escapeHtml(filterText)}</span>
-                            </td>
-                            <td style="width: 25%; vertical-align: top; padding: 10px;">
-                                <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Total Evidencias</strong>
-                                <span style="font-weight: bold; color: #0f172a;">${this.reportPhotos.length}</span>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <div style="margin-top: 20px;">
-                        <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-                            ${rowsHtml}
+                        <!-- BODY CONTENT -->
+                        <table align="center" border="0" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; background-color: #f8fafc; border-radius: 8px; font-family: Calibri, Arial, sans-serif; font-size: 10pt; margin-bottom: 25px; table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 25%;" />
+                                <col style="width: 25%;" />
+                                <col style="width: 25%;" />
+                                <col style="width: 25%;" />
+                            </colgroup>
+                            <tr>
+                                <td style="vertical-align: top; padding: 10px;">
+                                    <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Proyecto</strong>
+                                    <span style="font-weight: bold; color: #0f172a; text-transform: uppercase;">${escapeHtml(proj.name)}</span>
+                                </td>
+                                <td style="vertical-align: top; padding: 10px;">
+                                    <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Fecha de Reporte</strong>
+                                    <span style="color: #0f172a;">${escapeHtml(reportDate)}</span>
+                                </td>
+                                <td style="vertical-align: top; padding: 10px;">
+                                    <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Filtro Aplicado</strong>
+                                    <span style="color: #0f172a;">${escapeHtml(filterText)}</span>
+                                </td>
+                                <td style="vertical-align: top; padding: 10px;">
+                                    <strong style="display: block; color: #64748b; font-size: 8pt; text-transform: uppercase; margin-bottom: 2px;">Total Evidencias</strong>
+                                    <span style="font-weight: bold; color: #0f172a;">${this.reportPhotos.length}</span>
+                                </td>
+                            </tr>
                         </table>
+
+                        <div style="margin-top: 20px;">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 48%;" />
+                                    <col style="width: 4%;" />
+                                    <col style="width: 48%;" />
+                                </colgroup>
+                                ${rowsHtml}
+                            </table>
+                        </div>
                     </div>
                 </body>
                 </html>
