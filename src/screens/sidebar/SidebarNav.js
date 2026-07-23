@@ -52,7 +52,7 @@ export const SidebarNav = {
                     <nav class="space-y-1.5">
                         ${navItem('projects', 'folder_open', 'Proyectos')}
                         ${navItem('capture', 'photo_camera', 'Galería')}
-                        ${navItem('export', 'output', 'Exportar PDF / Excel')}
+                        ${navItem('export', 'output', 'Informes y Respaldos')}
                         ${navItem('settings', 'settings', 'Configuración')}
                         ${navItem('designer', 'design_services', 'Diseñador .logifmt')}
                     </nav>

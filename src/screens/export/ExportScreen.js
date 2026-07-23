@@ -12,14 +12,13 @@ export const ExportScreen = {
         const itemCount = State.items.length;
 
         return `
-            <div class="flex flex-col h-full w-full overflow-hidden p-8 space-y-6">
+            <div class="flex flex-col h-full w-full overflow-hidden p-5 space-y-4">
                 <!-- Header Exportar -->
-                <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
                     <div>
-                        <span class="text-[10px] font-bold font-headline uppercase tracking-widest text-primary">Estación de Generación de Informes</span>
-                        <h1 class="text-2xl font-bold font-headline text-white">Exportación de Datos (${proj?.name || 'PROYECTO'})</h1>
+                        <span class="text-[9px] font-bold font-headline uppercase tracking-widest text-primary">Estación de Generación de Informes</span>
+                        <h1 class="text-xl font-bold font-headline text-white">Informes y Respaldos</h1>
                     </div>
-                    <span class="text-xs font-mono text-white/50">${itemCount} Evidencias Registradas</span>
                 </div>
 
                 <!-- Filtros de Fecha (Compartido para exportación) -->
