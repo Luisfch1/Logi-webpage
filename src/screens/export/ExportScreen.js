@@ -733,35 +733,31 @@ export const ExportScreen = {
                 const borderBottom1 = '1px solid #cbd5e1';
                 const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
 
-                const detailsContent1 = (hasAct1 || hasDesc1) ? `
+                const detailsContent1 = `
                     ${hasAct1 ? `
                         <div style="margin-bottom: 6px;">
                             <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
                         </div>
                     ` : ''}
-                    ${hasDesc1 ? `
-                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${escapeHtml(displayDesc1)}</p>
-                    ` : ''}
-                ` : '';
+                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc1 ? escapeHtml(displayDesc1) : '&nbsp;'}</p>
+                `;
 
-                const detailsContent2 = (photo2 && (hasAct2 || hasDesc2)) ? `
+                const detailsContent2 = photo2 ? `
                     ${hasAct2 ? `
                         <div style="margin-bottom: 6px;">
                             <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
                         </div>
                     ` : ''}
-                    ${hasDesc2 ? `
-                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${escapeHtml(displayDesc2)}</p>
-                    ` : ''}
+                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc2 ? escapeHtml(displayDesc2) : '&nbsp;'}</p>
                 ` : '';
 
                 rowsHtml += `
                     <tr>
-                        <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: ${hasAct1 || hasDesc1 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                        <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 12px; font-size: 9pt; vertical-align: top;">
                             ${detailsContent1}
                         </td>
                         <td style="width: 4%;"></td>
-                        <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 && (hasAct2 || hasDesc2) ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                        <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
                             ${detailsContent2}
                         </td>
                     </tr>
@@ -812,24 +808,24 @@ export const ExportScreen = {
                     </style>
                 </head>
                 <body>
-                    <div class="Section1">
-                        <!-- NATIVE HEADER CONTAINER -->
-                        <div style="mso-element: header;" id="h1">
-                            <p class="MsoHeader">
-                                <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #cafd00; padding-bottom: 8px; font-family: Calibri, Arial, sans-serif;">
-                                    <tr>
-                                        <td style="vertical-align: middle; width: 120px;">
-                                            ${logoHtml}
-                                        </td>
-                                        <td align="right" style="vertical-align: bottom; font-family: Arial, sans-serif;">
-                                            <h1 style="font-size: 14pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas</h1>
-                                            <p style="font-size: 8pt; color: #64748b; margin: 2px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio Workspace</p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </p>
-                        </div>
+                    <!-- NATIVE HEADER CONTAINER OUTSIDE SECTION FLOW -->
+                    <div style="mso-element: header;" id="h1">
+                        <p class="MsoHeader">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #cafd00; padding-bottom: 8px; font-family: Calibri, Arial, sans-serif;">
+                                <tr>
+                                    <td style="vertical-align: middle; width: 120px;">
+                                        ${logoHtml}
+                                    </td>
+                                    <td align="right" style="vertical-align: bottom; font-family: Arial, sans-serif;">
+                                        <h1 style="font-size: 14pt; margin: 0; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">Reporte de Evidencias Fotogr&aacute;ficas</h1>
+                                        <p style="font-size: 8pt; color: #64748b; margin: 2px 0 0 0;">Generado autom&aacute;ticamente por LogiStudio Workspace</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </p>
+                    </div>
 
+                    <div class="Section1">
                         <!-- BODY CONTENT -->
                         <table align="center" border="0" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; background-color: #f8fafc; border-radius: 8px; font-family: Calibri, Arial, sans-serif; font-size: 10pt; margin-bottom: 25px; table-layout: fixed;">
                             <colgroup>
