@@ -10,100 +10,218 @@ import { Architect } from '../../core/Architect.js';
 export const ExportScreen = {
     assistantMode: false,
     reportPhotos: [],
+    selectedFormat: 'formato1',
+    savedMode: 'todo',
+    savedDay: new Date().toISOString().split('T')[0],
+    savedMonth: new Date().toISOString().split('T')[0].substring(0, 7),
+    savedStart: new Date().toISOString().split('T')[0],
+    savedEnd: new Date().toISOString().split('T')[0],
+
+    getCatalogUnit(activityCode) {
+        if (!activityCode) return 'GL';
+        const cleanCode = String(activityCode).trim().toUpperCase();
+        const catItem = State.catalog?.find(c => String(c.item).toUpperCase() === cleanCode);
+        if (catItem && catItem.unidad) return catItem.unidad;
+        
+        // Fallback: tratar de extraer de la descripción si contiene corchetes o paréntesis, ej: "(m3)" o "[m]"
+        const desc = catItem?.descripcion || '';
+        const match = desc.match(/[\[\((](m|m2|m3|gl|und|un|kg|t|global|ml|ha|km)[\]\)]/i);
+        if (match) return match[1].toUpperCase();
+        
+        return 'GL'; // Default fallback
+    },
 
     getLayout() {
         if (this.assistantMode) {
             return this.getAssistantLayout();
         }
         const proj = State.currentProject;
-        const itemCount = State.items.length;
 
         return `
-            <div class="flex flex-col h-full w-full overflow-hidden p-5 space-y-4">
+            <div class="flex flex-col h-full w-full overflow-hidden p-5 space-y-5">
                 <!-- Header Exportar -->
-                <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
+                <div class="flex justify-between items-center border-b border-white/10 pb-2.5 shrink-0">
                     <div>
                         <span class="text-[9px] font-bold font-headline uppercase tracking-widest text-primary">Estación de Generación de Informes</span>
                         <h1 class="text-xl font-bold font-headline text-white">Informes y Respaldos</h1>
                     </div>
                 </div>
 
-                <!-- Filtros de Fecha (Compartido para exportación) -->
-                <div class="bg-[#0a0a0c] border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-end">
-                    <div class="w-full md:w-48 shrink-0">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5 font-headline">Modo de Rango</label>
-                        <select id="export-select-mode" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-body">
-                            <option value="todo">Todo el Proyecto</option>
-                            <option value="dia">Día Específico</option>
-                            <option value="mes">Mes Específico</option>
-                            <option value="rango">Rango de Fechas</option>
-                        </select>
-                    </div>
-
-                    <div id="export-date-day-box" class="w-full md:w-48 hidden">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5 font-headline">Fecha Específica</label>
-                        <input id="export-date-day" type="date" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-body" />
-                    </div>
-
-                    <div id="export-date-month-box" class="w-full md:w-48 hidden">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5 font-headline">Mes</label>
-                        <input id="export-date-month" type="month" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-body" />
-                    </div>
-
-                    <div id="export-date-range-box" class="w-full flex gap-4 hidden">
-                        <div class="w-full md:w-48">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5 font-headline">Fecha Inicio</label>
-                            <input id="export-date-start" type="date" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-body" />
+                <!-- Barra Superior de Control (Toolbar Unificado en una sola fila) -->
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#0a0a0c] border border-white/10 p-4 rounded-2xl w-full shrink-0">
+                    <!-- Filtros de Rango (Lado Izquierdo) -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-white/40 font-headline">Rango:</span>
+                            <select id="export-select-mode" class="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:border-primary outline-none font-body">
+                                <option value="todo" ${this.savedMode === 'todo' ? 'selected' : ''}>Todo el Proyecto</option>
+                                <option value="dia" ${this.savedMode === 'dia' ? 'selected' : ''}>Día Específico</option>
+                                <option value="mes" ${this.savedMode === 'mes' ? 'selected' : ''}>Mes Específico</option>
+                                <option value="rango" ${this.savedMode === 'rango' ? 'selected' : ''}>Rango de Fechas</option>
+                            </select>
                         </div>
-                        <div class="w-full md:w-48">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/60 block mb-1.5 font-headline">Fecha Fin</label>
-                            <input id="export-date-end" type="date" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-body" />
+                        
+                        <div id="export-date-day-box" class="hidden">
+                            <input id="export-date-day" type="date" value="${this.savedDay}" class="bg-black/60 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:border-primary outline-none font-body" />
                         </div>
+
+                        <div id="export-date-month-box" class="hidden">
+                            <input id="export-date-month" type="month" value="${this.savedMonth}" class="bg-black/60 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:border-primary outline-none font-body" />
+                        </div>
+
+                        <div id="export-date-range-box" class="flex gap-2 hidden">
+                            <input id="export-date-start" type="date" value="${this.savedStart}" class="bg-black/60 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:border-primary outline-none font-body" />
+                            <span class="text-white/40 text-xs self-center">a</span>
+                            <input id="export-date-end" type="date" value="${this.savedEnd}" class="bg-black/60 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:border-primary outline-none font-body" />
+                        </div>
+                    </div>
+
+                    <!-- Acciones Principales (Lado Derecho) -->
+                    <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                        <button id="btn-export-excel" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-sm">table_chart</span>
+                            <span>Excel (.xlsx)</span>
+                        </button>
+                        <button id="btn-export-zip" class="px-3.5 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-sm">folder_zip</span>
+                            <span>Respaldo ZIP</span>
+                        </button>
+                        <button id="btn-start-assistant" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                            <span>Iniciar Asistente</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Opciones de Exportación Desktop -->
-                <div class="grid grid-cols-3 gap-6">
-                    <!-- Excel -->
-                    <div class="p-6 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-4 hover:border-emerald-500/50 transition-all">
-                        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-2xl">table_chart</span>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-white">Reporte Excel (.xlsx)</h3>
-                            <p class="text-xs text-white/40 mt-1">Exporta la tabla completa de ítems con sus descripciones, fechas e hipervínculos.</p>
-                        </div>
-                        <button id="btn-export-excel" class="w-full py-2.5 rounded-xl bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition-all">
-                            Exportar Excel
-                        </button>
+                <!-- Sección Principal: Selector de Formato de Reporte -->
+                <div class="flex-1 flex flex-col space-y-4 overflow-hidden min-h-0">
+                    <div class="shrink-0">
+                        <h2 class="text-sm font-bold font-headline text-white uppercase tracking-wider">Formatos de Reporte Fotográfico</h2>
+                        <p class="text-xs text-white/40 mt-0.5">Selecciona el diseño de página que se aplicará al generar el informe en PDF y Word.</p>
                     </div>
 
-                    <!-- PDF / Word Assistant -->
-                    <div class="p-6 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-4 hover:border-rose-500/50 transition-all">
-                        <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-1 select-none">
+                        
+                        <!-- Tarjeta Formato 1 -->
+                        <div class="format-card p-5 bg-[#0a0a0c] border rounded-2xl flex flex-col justify-between transition-all duration-300 cursor-pointer ${this.selectedFormat === 'formato1' ? 'border-primary bg-primary/[0.02] shadow-[0_0_15px_rgba(202,253,0,0.05)]' : 'border-white/10 hover:border-white/30'}" data-format="formato1">
+                            <div class="space-y-4">
+                                <!-- Previsualización CSS -->
+                                <div class="flex justify-center p-4 bg-black/40 rounded-xl border border-white/5">
+                                    <div class="w-40 h-56 bg-[#0c0c0e] border border-white/10 rounded p-2 flex flex-col justify-between">
+                                        <!-- Header ficticio -->
+                                        <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                            <div class="w-8 h-1 bg-white/20 rounded"></div>
+                                            <div class="w-12 h-1 bg-primary/45 rounded"></div>
+                                        </div>
+                                        <!-- Grilla 2x4 -->
+                                        <div class="grid grid-cols-2 gap-1 flex-1 py-1.5">
+                                            ${Array(8).fill(0).map(() => `
+                                                <div class="border border-white/5 bg-white/[0.02] rounded p-0.5 flex flex-col space-y-0.5">
+                                                    <div class="w-full h-5 bg-white/10 rounded"></div>
+                                                    <div class="w-full h-1 bg-white/5 rounded"></div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <!-- Footer ficticio -->
+                                        <div class="w-full h-1 bg-white/5 rounded"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                                        <span>Cuadrícula Clásica (2x4)</span>
+                                        ${this.selectedFormat === 'formato1' ? '<span class="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">Activo</span>' : ''}
+                                    </h3>
+                                    <p class="text-xs text-white/40 mt-1.5 leading-relaxed">Presenta hasta 8 fotos por página dispuestas en 2 columnas y hasta 4 filas. Maximiza la densidad de información y reduce hojas.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-base font-bold text-white">Generador de Informes (PDF / Word)</h3>
-                            <p class="text-xs text-white/40 mt-1">Configura, previsualiza y edita la selección de evidencias antes de generar tu reporte PDF o Word editable.</p>
-                        </div>
-                        <button id="btn-start-assistant" class="w-full py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs hover:bg-rose-400 transition-all">
-                            Iniciar Asistente
-                        </button>
-                    </div>
 
-                    <!-- Respaldo ZIP -->
-                    <div class="p-6 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-4 hover:border-primary/50 transition-all">
-                        <div class="w-12 h-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
-                            <span class="material-symbols-outlined text-2xl">folder_zip</span>
+                        <!-- Tarjeta Formato 2 -->
+                        <div class="format-card p-5 bg-[#0a0a0c] border rounded-2xl flex flex-col justify-between transition-all duration-300 cursor-pointer ${this.selectedFormat === 'formato2' ? 'border-primary bg-primary/[0.02] shadow-[0_0_15px_rgba(202,253,0,0.05)]' : 'border-white/10 hover:border-white/30'}" data-format="formato2">
+                            <div class="space-y-4">
+                                <!-- Previsualización CSS -->
+                                <div class="flex justify-center p-4 bg-black/40 rounded-xl border border-white/5">
+                                    <div class="w-40 h-56 bg-[#0c0c0e] border border-white/10 rounded p-2.5 flex flex-col justify-between">
+                                        <!-- Header ficticio -->
+                                        <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                            <div class="w-8 h-1 bg-white/20 rounded"></div>
+                                            <div class="w-12 h-1 bg-primary/45 rounded"></div>
+                                        </div>
+                                        <!-- Grid 2x1 -->
+                                        <div class="flex-1 flex flex-col justify-center space-y-2 py-2">
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div class="border border-white/5 bg-white/[0.02] rounded p-1 flex flex-col space-y-1.5">
+                                                    <div class="w-full h-16 bg-white/10 rounded"></div>
+                                                    <div class="space-y-1">
+                                                        <div class="w-full h-1 bg-white/5 rounded"></div>
+                                                        <div class="w-2/3 h-1 bg-white/5 rounded"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="border border-white/5 bg-white/[0.02] rounded p-1 flex flex-col space-y-1.5">
+                                                    <div class="w-full h-16 bg-white/10 rounded"></div>
+                                                    <div class="space-y-1">
+                                                        <div class="w-full h-1 bg-white/5 rounded"></div>
+                                                        <div class="w-2/3 h-1 bg-white/5 rounded"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Footer ficticio -->
+                                        <div class="w-full h-1 bg-white/5 rounded"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                                        <span>Duplo Clásico (2x1)</span>
+                                        ${this.selectedFormat === 'formato2' ? '<span class="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">Activo</span>' : ''}
+                                    </h3>
+                                    <p class="text-xs text-white/40 mt-1.5 leading-relaxed">Presenta exactamente 2 fotos por página (2 columnas, 1 fila) a gran escala. Destaca detalles de obra con descripciones amplias y legibles.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-base font-bold text-white">Respaldo ZIP de Fotos</h3>
-                            <p class="text-xs text-white/40 mt-1">Empaqueta las fotos filtradas por fecha organizadas en carpetas diarias.</p>
+
+                        <!-- Tarjeta Formato 3 -->
+                        <div class="format-card p-5 bg-[#0a0a0c] border rounded-2xl flex flex-col justify-between transition-all duration-300 cursor-pointer ${this.selectedFormat === 'formato3' ? 'border-primary bg-primary/[0.02] shadow-[0_0_15px_rgba(202,253,0,0.05)]' : 'border-white/10 hover:border-white/30'}" data-format="formato3">
+                            <div class="space-y-4">
+                                <!-- Previsualización CSS -->
+                                <div class="flex justify-center p-4 bg-black/40 rounded-xl border border-white/5">
+                                    <div class="w-40 h-56 bg-[#0c0c0e] border border-white/10 rounded p-2.5 flex flex-col justify-between">
+                                        <!-- Header ficticio -->
+                                        <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                            <div class="w-8 h-1 bg-white/20 rounded"></div>
+                                            <div class="w-12 h-1 bg-primary/45 rounded"></div>
+                                        </div>
+                                        <!-- Ficha Técnica -->
+                                        <div class="flex-1 flex flex-col justify-center space-y-2 py-2">
+                                            <div class="border border-white/10 bg-white/[0.01] rounded overflow-hidden flex flex-col">
+                                                <div class="grid grid-cols-2 gap-1 p-1 bg-white/[0.02]">
+                                                    <div class="w-full h-12 bg-white/10 rounded-sm"></div>
+                                                    <div class="w-full h-12 bg-white/10 rounded-sm"></div>
+                                                </div>
+                                                <div class="p-1 border-t border-white/5 space-y-1 bg-black/20">
+                                                    <div class="flex justify-between">
+                                                        <div class="w-6 h-1 bg-primary/40 rounded"></div>
+                                                        <div class="w-4 h-1 bg-white/20 rounded"></div>
+                                                    </div>
+                                                    <div class="w-full h-1 bg-white/5 rounded"></div>
+                                                    <div class="w-4/5 h-1 bg-white/5 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Footer ficticio -->
+                                        <div class="w-full h-1 bg-white/5 rounded"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                                        <span>Ficha Técnica Unificada</span>
+                                        ${this.selectedFormat === 'formato3' ? '<span class="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">Activo</span>' : ''}
+                                    </h3>
+                                    <p class="text-xs text-white/40 mt-1.5 leading-relaxed">Agrupa fotos en parejas en una tabla técnica unificada, compartiendo código de actividad, unidad de medida y descripción unificada.</p>
+                                </div>
+                            </div>
                         </div>
-                        <button id="btn-export-zip" class="w-full py-2.5 rounded-xl bg-primary text-black font-bold text-xs glow-border transition-all">
-                            Descargar Respaldo .zip
-                        </button>
+
                     </div>
                 </div>
             </div>
@@ -115,22 +233,6 @@ export const ExportScreen = {
             this.bindAssistantEvents();
             return;
         }
-
-        // Inicializar inputs de fecha con valores por defecto
-        const todayStr = new Date().toISOString().split('T')[0];
-        const monthStr = new Date().toISOString().split('T')[0].substring(0, 7);
-
-        const dateDay = document.getElementById('export-date-day');
-        if (dateDay) dateDay.value = todayStr;
-
-        const dateMonth = document.getElementById('export-date-month');
-        if (dateMonth) dateMonth.value = monthStr;
-
-        const dateStart = document.getElementById('export-date-start');
-        if (dateStart) dateStart.value = todayStr;
-
-        const dateEnd = document.getElementById('export-date-end');
-        if (dateEnd) dateEnd.value = todayStr;
 
         this.bindEvents();
     },
@@ -155,9 +257,37 @@ export const ExportScreen = {
         };
 
         if (selectMode) {
-            selectMode.onchange = updateVisibility;
+            selectMode.onchange = () => {
+                this.savedMode = selectMode.value;
+                updateVisibility();
+            };
             updateVisibility();
         }
+
+        const dateDay = document.getElementById('export-date-day');
+        if (dateDay) {
+            dateDay.onchange = () => { this.savedDay = dateDay.value; };
+        }
+        const dateMonth = document.getElementById('export-date-month');
+        if (dateMonth) {
+            dateMonth.onchange = () => { this.savedMonth = dateMonth.value; };
+        }
+        const dateStart = document.getElementById('export-date-start');
+        if (dateStart) {
+            dateStart.onchange = () => { this.savedStart = dateStart.value; };
+        }
+        const dateEnd = document.getElementById('export-date-end');
+        if (dateEnd) {
+            dateEnd.onchange = () => { this.savedEnd = dateEnd.value; };
+        }
+
+        // Selección de formato de reporte
+        document.querySelectorAll('.format-card').forEach(card => {
+            card.onclick = () => {
+                this.selectedFormat = card.dataset.format;
+                Architect.render('export');
+            };
+        });
 
         const btnZip = document.getElementById('btn-export-zip');
         if (btnZip) {
@@ -416,45 +546,168 @@ export const ExportScreen = {
             `;
 
             let photoCardsHtml = '';
-            for (let i = 0; i < this.reportPhotos.length; i++) {
-                const photo = this.reportPhotos[i];
-                const imgUrl = await LogiNative.getBlobUri(photo.filename);
-                
-                const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
-                const catalogDesc = catalogItem ? catalogItem.descripcion : '';
-                const displayDesc = photo.descripcion || catalogDesc || '';
-                
-                const isGeneral = !photo.actividad || String(photo.actividad).trim().toUpperCase() === 'GENERAL';
-                const hasAct = !isGeneral;
-                const hasDesc = !!displayDesc;
 
-                let detailsHtml = '';
-                if (hasAct || hasDesc) {
-                    detailsHtml = `
-                        <div class="photo-details" style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 11px;">
-                            ${hasAct ? `
-                                <div class="photo-act-time" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 6px;">
-                                    <span class="photo-act" style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo.actividad}</span>
-                                </div>
-                            ` : ''}
-                            ${hasDesc ? `
-                                <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-family: Arial, Helvetica, sans-serif;">${displayDesc}</p>
-                            ` : ''}
+            if (this.selectedFormat === 'formato1') {
+                for (let i = 0; i < this.reportPhotos.length; i++) {
+                    const photo = this.reportPhotos[i];
+                    const imgUrl = await LogiNative.getBlobUri(photo.filename);
+                    const catItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
+                    const displayDesc = photo.descripcion || (catItem ? catItem.descripcion : '') || '';
+                    const isGeneral = !photo.actividad || String(photo.actividad).trim().toUpperCase() === 'GENERAL';
+
+                    let detailsHtml = '';
+                    if (!isGeneral || displayDesc) {
+                        detailsHtml = `
+                            <div class="photo-details" style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 11px;">
+                                ${!isGeneral ? `
+                                    <div class="photo-act-time" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 6px;">
+                                        <span class="photo-act" style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo.actividad}</span>
+                                    </div>
+                                ` : ''}
+                                ${displayDesc ? `
+                                    <p class="photo-desc" style="color: #334155; line-height: 1.4; margin: 0; font-family: Arial, sans-serif;">${displayDesc}</p>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+
+                    photoCardsHtml += `
+                        <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: auto;">
+                            <div style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 6px 12px; font-size: 10px; font-weight: bold; color: #64748b; font-family: Arial, sans-serif;">
+                                FOTO #${i + 1}
+                            </div>
+                            <div style="width: 100%; height: 210px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #cbd5e1;">
+                                <img src="${imgUrl || ''}" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+                            ${detailsHtml}
                         </div>
                     `;
                 }
+            } else if (this.selectedFormat === 'formato2') {
+                for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                    const photo1 = this.reportPhotos[i];
+                    const photo2 = this.reportPhotos[i + 1];
 
-                photoCardsHtml += `
-                    <div class="photo-card" style="page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: auto;">
-                        <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 12px; font-size: 11px; font-weight: bold; color: #64748b; font-family: Arial, Helvetica, sans-serif;">
-                            FOTO #${i + 1}
+                    const imgUrl1 = await LogiNative.getBlobUri(photo1.filename);
+                    const catItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                    const displayDesc1 = photo1.descripcion || (catItem1 ? catItem1.descripcion : '') || '';
+
+                    let photo2Html = '';
+                    if (photo2) {
+                        const imgUrl2 = await LogiNative.getBlobUri(photo2.filename);
+                        const catItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                        const displayDesc2 = photo2.descripcion || (catItem2 ? catItem2.descripcion : '') || '';
+                        photo2Html = `
+                            <div class="photo-card" style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: auto;">
+                                <div style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 6px 12px; font-size: 10px; font-weight: bold; color: #64748b; font-family: Arial, sans-serif;">
+                                    FOTO #${i + 2}
+                                </div>
+                                <div style="width: 100%; height: 210px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #cbd5e1;">
+                                    <img src="${imgUrl2 || ''}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                </div>
+                                <div style="padding: 12px; font-size: 11px; flex: 1;">
+                                    <div style="margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                        <span style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo2.actividad || 'GENERAL'}</span>
+                                    </div>
+                                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Arial, sans-serif;">${displayDesc2}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        photo2Html = `<div style="border: 1px solid transparent; background: transparent;"></div>`;
+                    }
+
+                    photoCardsHtml += `
+                        <div class="page-wrapper" style="page-break-after: always; display: flex; flex-direction: column; justify-content: flex-start; margin-bottom: 25px;">
+                            <div class="grid-photos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="photo-card" style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; display: flex; flex-direction: column; height: auto;">
+                                    <div style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 6px 12px; font-size: 10px; font-weight: bold; color: #64748b; font-family: Arial, sans-serif;">
+                                        FOTO #${i + 1}
+                                    </div>
+                                    <div style="width: 100%; height: 210px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #cbd5e1;">
+                                        <img src="${imgUrl1 || ''}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    </div>
+                                    <div style="padding: 12px; font-size: 11px; flex: 1;">
+                                        <div style="margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                            <span style="font-weight: 700; color: #000; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${photo1.actividad || 'GENERAL'}</span>
+                                        </div>
+                                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Arial, sans-serif;">${displayDesc1}</p>
+                                    </div>
+                                </div>
+                                ${photo2Html}
+                            </div>
                         </div>
-                        <div class="photo-img-box" style="width: 100%; height: 230px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e2e8f0;">
-                            <img class="photo-img" src="${imgUrl || ''}" alt="Evidencia" style="width: 100%; height: 100%; object-fit: cover;" />
+                    `;
+                }
+            } else if (this.selectedFormat === 'formato3') {
+                for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                    const photo1 = this.reportPhotos[i];
+                    const photo2 = this.reportPhotos[i + 1];
+
+                    const imgUrl1 = await LogiNative.getBlobUri(photo1.filename);
+                    const imgUrl2 = photo2 ? await LogiNative.getBlobUri(photo2.filename) : '';
+
+                    const catItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                    const displayDesc1 = photo1.descripcion || (catItem1 ? catItem1.descripcion : '') || '';
+                    const unit1 = this.getCatalogUnit(photo1.actividad);
+
+                    let combinedDesc = displayDesc1;
+                    let combinedItem = photo1.actividad || 'GENERAL';
+                    let combinedUnit = unit1;
+
+                    if (photo2) {
+                        const catItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                        const displayDesc2 = photo2.descripcion || (catItem2 ? catItem2.descripcion : '') || '';
+                        
+                        if (displayDesc2 && displayDesc2 !== displayDesc1) {
+                            combinedDesc = displayDesc1 ? `${displayDesc1} / ${displayDesc2}` : displayDesc2;
+                        }
+                        if (photo2.actividad && photo2.actividad !== photo1.actividad) {
+                            combinedItem = `${photo1.actividad || 'GENERAL'} + ${photo2.actividad}`;
+                        }
+                    }
+
+                    photoCardsHtml += `
+                        <div class="technical-card" style="page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 25px; font-family: Arial, sans-serif;">
+                            <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 50%; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #f8fafc; text-align: center; vertical-align: middle;">
+                                        <div style="font-size: 9px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-align: left;">FOTO #${i + 1}</div>
+                                        <img src="${imgUrl1 || ''}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;" />
+                                    </td>
+                                    <td style="width: 50%; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #f8fafc; border-left: 1px solid #cbd5e1; text-align: center; vertical-align: middle;">
+                                        ${photo2 ? `
+                                            <div style="font-size: 9px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-align: left;">FOTO #${i + 2}</div>
+                                            <img src="${imgUrl2 || ''}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;" />
+                                        ` : `
+                                            <div style="color: #94a3b8; font-size: 11px; font-style: italic;">Sin evidencia adicional</div>
+                                        `}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding: 10px; background: #fff;">
+                                        <table border="0" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                            <tr>
+                                                <td style="width: 25%; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569;">FOTOS REGISTRADAS</td>
+                                                <td style="width: 25%; border: 1px solid #cbd5e1; color: #0f172a; font-weight: bold;">#${i + 1} ${photo2 ? `y #${i + 2}` : ''}</td>
+                                                <td style="width: 25%; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569;">ACTIVIDAD / ÍTEM</td>
+                                                <td style="width: 25%; border: 1px solid #cbd5e1; color: #0f172a; font-family: monospace; font-weight: bold; text-transform: uppercase;">${combinedItem}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569;">UNIDAD DE MEDIDA</td>
+                                                <td colspan="3" style="border: 1px solid #cbd5e1; color: #0f172a; font-weight: bold; text-transform: uppercase;">${combinedUnit}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; vertical-align: top;">DESCRIPCIÓN UNIFICADA</td>
+                                                <td colspan="3" style="border: 1px solid #cbd5e1; color: #334155; line-height: 1.4; vertical-align: top;">${combinedDesc || 'Sin descripción técnica registrada.'}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-                        ${detailsHtml}
-                    </div>
-                `;
+                    `;
+                }
             }
 
             const selectMode = document.getElementById('export-select-mode');
@@ -611,7 +864,6 @@ export const ExportScreen = {
             window.hideLoader();
         }
     },
-
     async generateWordFromAssistant() {
         const proj = State.currentProject;
         if (!proj) return;
@@ -674,7 +926,7 @@ export const ExportScreen = {
                 filterText = `Rango (${document.getElementById('export-date-start')?.value || ''} al ${document.getElementById('export-date-end')?.value || ''})`;
             }
 
-            // Agrupar fotos en pares para maquetar 2 columnas nativas en una sola tabla en Word (sin tablas anidadas)
+            // Agrupar fotos según formato
             let rowsHtml = '';
             const photoEmbeds = [];
 
@@ -692,104 +944,197 @@ export const ExportScreen = {
                 }
             };
 
-            for (let i = 0; i < this.reportPhotos.length; i += 2) {
-                const photo1 = this.reportPhotos[i];
-                const photo2 = this.reportPhotos[i + 1];
+            if (this.selectedFormat === 'formato1' || this.selectedFormat === 'formato2') {
+                for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                    const photo1 = this.reportPhotos[i];
+                    const photo2 = this.reportPhotos[i + 1];
 
-                await registerPhoto(photo1);
-                if (photo2) {
-                    await registerPhoto(photo2);
-                }
+                    await registerPhoto(photo1);
+                    if (photo2) {
+                        await registerPhoto(photo2);
+                    }
 
-                const card1Num = i + 1;
-                const card2Num = i + 2;
+                    const card1Num = i + 1;
+                    const card2Num = i + 2;
 
-                // Photo 1 Details
-                const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
-                const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
-                const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
-                
-                const isGeneral1 = !photo1.actividad || String(photo1.actividad).trim().toUpperCase() === 'GENERAL';
-                const hasAct1 = !isGeneral1;
-                const hasDesc1 = !!displayDesc1;
-
-                // Photo 2 Details
-                let hasAct2 = false;
-                let hasDesc2 = false;
-                let displayDesc2 = '';
-                if (photo2) {
-                    const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
-                    const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
-                    displayDesc2 = photo2.descripcion || catalogDesc2 || '';
+                    // Photo 1 Details
+                    const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                    const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
+                    const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
                     
-                    const isGeneral2 = !photo2.actividad || String(photo2.actividad).trim().toUpperCase() === 'GENERAL';
-                    hasAct2 = !isGeneral2;
-                    hasDesc2 = !!displayDesc2;
+                    const isGeneral1 = !photo1.actividad || String(photo1.actividad).trim().toUpperCase() === 'GENERAL';
+                    const hasAct1 = !isGeneral1;
+                    const hasDesc1 = !!displayDesc1;
+
+                    // Photo 2 Details
+                    let hasAct2 = false;
+                    let hasDesc2 = false;
+                    let displayDesc2 = '';
+                    if (photo2) {
+                        const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                        const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
+                        displayDesc2 = photo2.descripcion || catalogDesc2 || '';
+                        
+                        const isGeneral2 = !photo2.actividad || String(photo2.actividad).trim().toUpperCase() === 'GENERAL';
+                        hasAct2 = !isGeneral2;
+                        hasDesc2 = !!displayDesc2;
+                    }
+
+                    // 1. Fila de Cabecera (FOTO #num)
+                    rowsHtml += `
+                        <tr>
+                            <td style="width: 48%; background-color: #f8fafc; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                                FOTO #${card1Num}
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td style="width: 48%; background-color: ${photo2 ? '#f8fafc' : 'transparent'}; border-top: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                                ${photo2 ? `FOTO #${card2Num}` : ''}
+                            </td>
+                        </tr>
+                    `;
+
+                    // 2. Fila de Imagen
+                    rowsHtml += `
+                        <tr>
+                            <td align="center" style="width: 48%; background-color: #ffffff; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 10px; vertical-align: middle;">
+                                <img src="cid:photo_${photo1.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td align="center" style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 10px; vertical-align: middle;">
+                                ${photo2 ? `<img src="cid:photo_${photo2.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />` : ''}
+                            </td>
+                        </tr>
+                    `;
+
+                    // 3. Fila de Detalles
+                    const borderBottom1 = '1px solid #cbd5e1';
+                    const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
+
+                    const detailsContent1 = `
+                        ${hasAct1 ? `
+                            <div style="margin-bottom: 6px;">
+                                <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
+                            </div>
+                        ` : ''}
+                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc1 ? escapeHtml(displayDesc1) : '&nbsp;'}</p>
+                    `;
+
+                    const detailsContent2 = photo2 ? `
+                        ${hasAct2 ? `
+                            <div style="margin-bottom: 6px;">
+                                <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
+                            </div>
+                        ` : ''}
+                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc2 ? escapeHtml(displayDesc2) : '&nbsp;'}</p>
+                    ` : '';
+
+                    rowsHtml += `
+                        <tr>
+                            <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 12px; font-size: 9pt; vertical-align: top;">
+                                ${detailsContent1}
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                                ${detailsContent2}
+                            </td>
+                        </tr>
+                    `;
+
+                    if (this.selectedFormat === 'formato2') {
+                        rowsHtml += `
+                            <tr style="page-break-before: always; mso-special-character:line-break;">
+                                <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+                            </tr>
+                        `;
+                    } else {
+                        rowsHtml += `
+                            <!-- Fila de Espaciado -->
+                            <tr style="height: 15px;">
+                                <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+                            </tr>
+                        `;
+                    }
                 }
+            } else if (this.selectedFormat === 'formato3') {
+                for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                    const photo1 = this.reportPhotos[i];
+                    const photo2 = this.reportPhotos[i + 1];
 
-                // 1. Fila de Cabecera (FOTO #num)
-                rowsHtml += `
-                    <tr>
-                        <td style="width: 48%; background-color: #f8fafc; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
-                            FOTO #${card1Num}
-                        </td>
-                        <td style="width: 4%;"></td>
-                        <td style="width: 48%; background-color: ${photo2 ? '#f8fafc' : 'transparent'}; border-top: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
-                            ${photo2 ? `FOTO #${card2Num}` : ''}
-                        </td>
-                    </tr>
-                `;
+                    await registerPhoto(photo1);
+                    if (photo2) {
+                        await registerPhoto(photo2);
+                    }
 
-                // 2. Fila de Imagen
-                rowsHtml += `
-                    <tr>
-                        <td align="center" style="width: 48%; background-color: #ffffff; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 10px; vertical-align: middle;">
-                            <img src="cid:photo_${photo1.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
-                        </td>
-                        <td style="width: 4%;"></td>
-                        <td align="center" style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 10px; vertical-align: middle;">
-                            ${photo2 ? `<img src="cid:photo_${photo2.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />` : ''}
-                        </td>
-                    </tr>
-                `;
+                    const catItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                    const displayDesc1 = photo1.descripcion || (catItem1 ? catItem1.descripcion : '') || '';
+                    const unit1 = this.getCatalogUnit(photo1.actividad);
 
-                // 3. Fila de Detalles
-                const borderBottom1 = '1px solid #cbd5e1';
-                const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
+                    let combinedDesc = displayDesc1;
+                    let combinedItem = photo1.actividad || 'GENERAL';
+                    let combinedUnit = unit1;
 
-                const detailsContent1 = `
-                    ${hasAct1 ? `
-                        <div style="margin-bottom: 6px;">
-                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
-                        </div>
-                    ` : ''}
-                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc1 ? escapeHtml(displayDesc1) : '&nbsp;'}</p>
-                `;
+                    if (photo2) {
+                        const catItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                        const displayDesc2 = photo2.descripcion || (catItem2 ? catItem2.descripcion : '') || '';
+                        
+                        if (displayDesc2 && displayDesc2 !== displayDesc1) {
+                            combinedDesc = displayDesc1 ? `${displayDesc1} / ${displayDesc2}` : displayDesc2;
+                        }
+                        if (photo2.actividad && photo2.actividad !== photo1.actividad) {
+                            combinedItem = `${photo1.actividad || 'GENERAL'} + ${photo2.actividad}`;
+                        }
+                    }
 
-                const detailsContent2 = photo2 ? `
-                    ${hasAct2 ? `
-                        <div style="margin-bottom: 6px;">
-                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
-                        </div>
-                    ` : ''}
-                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc2 ? escapeHtml(displayDesc2) : '&nbsp;'}</p>
-                ` : '';
-
-                rowsHtml += `
-                    <tr>
-                        <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 12px; font-size: 9pt; vertical-align: top;">
-                            ${detailsContent1}
-                        </td>
-                        <td style="width: 4%;"></td>
-                        <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
-                            ${detailsContent2}
-                        </td>
-                    </tr>
-                    <!-- Fila de Espaciado -->
-                    <tr style="height: 15px;">
-                        <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
-                    </tr>
-                `;
+                    rowsHtml += `
+                        <tr>
+                            <td colspan="3" style="width: 100%;">
+                                <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin-bottom: 20px; font-family: Calibri, Arial, sans-serif;">
+                                    <!-- Images Row -->
+                                    <tr>
+                                        <td align="center" style="width: 48%; padding: 8px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1; vertical-align: middle;">
+                                            <div style="font-size: 8pt; font-weight: bold; color: #64748b; margin-bottom: 4px; text-align: left;">FOTO #${i + 1}</div>
+                                            <img src="cid:photo_${photo1.id}" width="270" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
+                                        </td>
+                                        <td style="width: 4%; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;"></td>
+                                        <td align="center" style="width: 48%; padding: 8px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; vertical-align: middle;">
+                                            ${photo2 ? `
+                                                <div style="font-size: 8pt; font-weight: bold; color: #64748b; margin-bottom: 4px; text-align: left;">FOTO #${i + 2}</div>
+                                                <img src="cid:photo_${photo2.id}" width="270" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
+                                            ` : `
+                                                <div style="color: #cbd5e1; font-size: 9pt; font-style: italic; text-align: center;">Sin evidencia adicional</div>
+                                            `}
+                                        </td>
+                                    </tr>
+                                    <!-- Technical Data -->
+                                    <tr>
+                                        <td colspan="3" style="padding: 10px; background-color: #ffffff;">
+                                            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 8.5pt;">
+                                                <tr>
+                                                    <td style="width: 25%; background-color: #f8fafc; font-weight: bold; color: #475569; border: 1px solid #cbd5e1;">FOTOS REGISTRADAS</td>
+                                                    <td style="width: 25%; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1;">#${i + 1} ${photo2 ? `y #${i + 2}` : ''}</td>
+                                                    <td style="width: 25%; background-color: #f8fafc; font-weight: bold; color: #475569; border: 1px solid #cbd5e1;">ACTIVIDAD / ÍTEM</td>
+                                                    <td style="width: 25%; color: #0f172a; font-family: monospace; font-weight: bold; text-transform: uppercase; border: 1px solid #cbd5e1;">${escapeHtml(combinedItem)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="background-color: #f8fafc; font-weight: bold; color: #475569; border: 1px solid #cbd5e1;">UNIDAD DE MEDIDA</td>
+                                                    <td colspan="3" style="color: #0f172a; font-weight: bold; text-transform: uppercase; border: 1px solid #cbd5e1;">${escapeHtml(combinedUnit)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="background-color: #f8fafc; font-weight: bold; color: #475569; vertical-align: top; border: 1px solid #cbd5e1;">DESCRIPCIÓN UNIFICADA</td>
+                                                    <td colspan="3" style="color: #334155; line-height: 1.4; vertical-align: top; border: 1px solid #cbd5e1;">${escapeHtml(combinedDesc) || 'Sin descripci&oacute;n t&eacute;cnica registrada.'}</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <!-- Fila de Espaciado -->
+                        <tr style="height: 15px;">
+                            <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+                        </tr>
+                    `;
+                }
             }
 
             const htmlContent = `
