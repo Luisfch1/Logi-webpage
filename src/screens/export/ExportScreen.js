@@ -929,10 +929,8 @@ export const ExportScreen = {
             // Parte 5: Fin MHTML
             mhtmlParts.push(`--${boundary}--\r\n`);
 
-            const mhtmlContent = mhtmlParts.join("");
-
-            // Guardar como Blob usando la extensión .doc
-            const blob = new Blob([mhtmlContent], {
+            // Guardar como Blob usando la extensión .doc (pasando las partes directamente para evitar límites de string en JS)
+            const blob = new Blob(mhtmlParts, {
                 type: 'application/msword;charset=utf-8'
             });
 
