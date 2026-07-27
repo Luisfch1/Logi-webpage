@@ -582,6 +582,11 @@ export const ExportScreen = {
                             ${detailsHtml}
                         </div>
                     `;
+
+                    // Salto de página cada 8 fotos (4 filas) en PDF
+                    if ((i + 1) % 8 === 0 && (i + 1) < this.reportPhotos.length) {
+                        photoCardsHtml += `<div style="page-break-after: always; grid-column: span 2; height: 0; margin: 0; padding: 0;"></div>`;
+                    }
                 }
             } else if (this.selectedFormat === 'formato2') {
                 for (let i = 0; i < this.reportPhotos.length; i += 2) {
@@ -668,7 +673,7 @@ export const ExportScreen = {
                     }
 
                     photoCardsHtml += `
-                        <div class="technical-card" style="page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 25px; font-family: Arial, sans-serif;">
+                        <div class="technical-card" style="page-break-inside: avoid; page-break-after: always; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 25px; font-family: Arial, sans-serif;">
                             <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
                                 <tr>
                                     <td style="width: 50%; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #f8fafc; text-align: center; vertical-align: middle;">
@@ -802,6 +807,10 @@ export const ExportScreen = {
                             grid-template-columns: 1fr 1fr;
                             gap: 20px;
                         }
+                        .report-content {
+                            width: 100%;
+                            display: block;
+                        }
                         @media print {
                             body {
                                 padding: 0;
@@ -842,9 +851,15 @@ export const ExportScreen = {
                         </div>
                     </div>
  
-                    <div class="grid-photos">
-                        ${photoCardsHtml}
-                    </div>
+                    ${this.selectedFormat === 'formato1' ? `
+                        <div class="grid-photos">
+                            ${photoCardsHtml}
+                        </div>
+                    ` : `
+                        <div class="report-content">
+                            ${photoCardsHtml}
+                        </div>
+                    `}
  
                     <script>
                         window.onload = function() {
@@ -885,6 +900,14 @@ export const ExportScreen = {
             const logoB64 = await LogiNative.getLogo();
             
             const hasLogo = !!logoB64;
+            let logoRaw = '';
+            let logoMime = 'image/jpeg';
+            if (hasLogo) {
+                const logoParts = logoB64.split(';base64,');
+                logoRaw = logoParts[1] || logoB64;
+                logoMime = logoParts[0].replace(/^data:/, '') || 'image/jpeg';
+            }
+
             const logoHtml = hasLogo ? `<img src="cid:logo" width="120" style="object-fit:contain;" />` : `
                 <div style="font-family: Arial, sans-serif; font-weight: bold; font-size: 20px; color: #000;">
                     LOGISTUDIO
@@ -930,12 +953,19 @@ export const ExportScreen = {
             let rowsHtml = '';
             const photoEmbeds = [];
 
+            const chunkBase64 = (base64Str) => {
+                if (!base64Str) return '';
+                const clean = base64Str.replace(/[\r\n]/g, '');
+                return clean.match(/.{1,76}/g).join("\r\n");
+            };
+
             const registerPhoto = async (photo) => {
                 if (!photo) return;
                 const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
                 if (base64Data) {
-                    const rawBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
-                    const mimeType = base64Data.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
+                    const parts = base64Data.split(';base64,');
+                    const rawBase64 = parts[1] || base64Data;
+                    const mimeType = parts[0].replace(/^data:/, '') || 'image/jpeg';
                     photoEmbeds.push({
                         cid: `photo_${photo.id}`,
                         mime: mimeType,
@@ -944,7 +974,91 @@ export const ExportScreen = {
                 }
             };
 
-            if (this.selectedFormat === 'formato1' || this.selectedFormat === 'formato2') {
+            const generateWordTwoColumnRow = (photo1, photo2, card1Num, card2Num, isLastRow = false) => {
+                const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
+                const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
+                const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
+                
+                const isGeneral1 = !photo1.actividad || String(photo1.actividad).trim().toUpperCase() === 'GENERAL';
+                const hasAct1 = !isGeneral1;
+                const hasDesc1 = !!displayDesc1;
+
+                let hasAct2 = false;
+                let hasDesc2 = false;
+                let displayDesc2 = '';
+                if (photo2) {
+                    const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
+                    const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
+                    displayDesc2 = photo2.descripcion || catalogDesc2 || '';
+                    
+                    const isGeneral2 = !photo2.actividad || String(photo2.actividad).trim().toUpperCase() === 'GENERAL';
+                    hasAct2 = !isGeneral2;
+                    hasDesc2 = !!displayDesc2;
+                }
+
+                const borderBottom1 = '1px solid #cbd5e1';
+                const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
+
+                const detailsContent1 = `
+                    ${hasAct1 ? `
+                        <div style="margin-bottom: 6px;">
+                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
+                        </div>
+                    ` : ''}
+                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc1 ? escapeHtml(displayDesc1) : '&nbsp;'}</p>
+                `;
+
+                const detailsContent2 = photo2 ? `
+                    ${hasAct2 ? `
+                        <div style="margin-bottom: 6px;">
+                            <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
+                        </div>
+                    ` : ''}
+                    <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc2 ? escapeHtml(displayDesc2) : '&nbsp;'}</p>
+                ` : '';
+
+                let html = `
+                    <tr>
+                        <td style="width: 48%; background-color: #f8fafc; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                            FOTO #${card1Num}
+                        </td>
+                        <td style="width: 4%;"></td>
+                        <td style="width: 48%; background-color: ${photo2 ? '#f8fafc' : 'transparent'}; border-top: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
+                            ${photo2 ? `FOTO #${card2Num}` : ''}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="width: 48%; background-color: #ffffff; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 10px; vertical-align: middle;">
+                            <img src="cid:photo_${photo1.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
+                        </td>
+                        <td style="width: 4%;"></td>
+                        <td align="center" style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 10px; vertical-align: middle;">
+                            ${photo2 ? `<img src="cid:photo_${photo2.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />` : ''}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 12px; font-size: 9pt; vertical-align: top;">
+                            ${detailsContent1}
+                        </td>
+                        <td style="width: 4%;"></td>
+                        <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
+                            ${detailsContent2}
+                        </td>
+                    </tr>
+                `;
+
+                if (!isLastRow) {
+                    html += `
+                        <!-- Fila de Espaciado -->
+                        <tr style="height: 15px;">
+                            <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+                        </tr>
+                    `;
+                }
+                return html;
+            };
+
+            if (this.selectedFormat === 'formato1') {
                 for (let i = 0; i < this.reportPhotos.length; i += 2) {
                     const photo1 = this.reportPhotos[i];
                     const photo2 = this.reportPhotos[i + 1];
@@ -954,104 +1068,47 @@ export const ExportScreen = {
                         await registerPhoto(photo2);
                     }
 
-                    const card1Num = i + 1;
-                    const card2Num = i + 2;
+                    const isLast = (i + 2) >= this.reportPhotos.length;
+                    rowsHtml += generateWordTwoColumnRow(photo1, photo2, i + 1, i + 2, isLast);
 
-                    // Photo 1 Details
-                    const catalogItem1 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo1.actividad || '').toUpperCase());
-                    const catalogDesc1 = catalogItem1 ? catalogItem1.descripcion : '';
-                    const displayDesc1 = photo1.descripcion || catalogDesc1 || '';
-                    
-                    const isGeneral1 = !photo1.actividad || String(photo1.actividad).trim().toUpperCase() === 'GENERAL';
-                    const hasAct1 = !isGeneral1;
-                    const hasDesc1 = !!displayDesc1;
+                    // Salto de página cada 8 fotos (4 filas) en Word
+                    if ((i + 2) % 8 === 0 && (i + 2) < this.reportPhotos.length) {
+                        rowsHtml += `
+                            </table>
+                            <br clear="all" style="page-break-before: always; mso-special-character:line-break;" />
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px;">
+                                <colgroup>
+                                    <col style="width: 48%;" />
+                                    <col style="width: 4%;" />
+                                    <col style="width: 48%;" />
+                                </colgroup>
+                        `;
+                    }
+                }
+            } else if (this.selectedFormat === 'formato2') {
+                for (let i = 0; i < this.reportPhotos.length; i += 2) {
+                    const photo1 = this.reportPhotos[i];
+                    const photo2 = this.reportPhotos[i + 1];
 
-                    // Photo 2 Details
-                    let hasAct2 = false;
-                    let hasDesc2 = false;
-                    let displayDesc2 = '';
+                    await registerPhoto(photo1);
                     if (photo2) {
-                        const catalogItem2 = State.catalog?.find(c => String(c.item).toUpperCase() === (photo2.actividad || '').toUpperCase());
-                        const catalogDesc2 = catalogItem2 ? catalogItem2.descripcion : '';
-                        displayDesc2 = photo2.descripcion || catalogDesc2 || '';
-                        
-                        const isGeneral2 = !photo2.actividad || String(photo2.actividad).trim().toUpperCase() === 'GENERAL';
-                        hasAct2 = !isGeneral2;
-                        hasDesc2 = !!displayDesc2;
+                        await registerPhoto(photo2);
                     }
 
-                    // 1. Fila de Cabecera (FOTO #num)
-                    rowsHtml += `
-                        <tr>
-                            <td style="width: 48%; background-color: #f8fafc; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
-                                FOTO #${card1Num}
-                            </td>
-                            <td style="width: 4%;"></td>
-                            <td style="width: 48%; background-color: ${photo2 ? '#f8fafc' : 'transparent'}; border-top: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 6px 12px; font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #64748b;">
-                                ${photo2 ? `FOTO #${card2Num}` : ''}
-                            </td>
-                        </tr>
-                    `;
+                    const isLast = (i + 2) >= this.reportPhotos.length;
+                    rowsHtml += generateWordTwoColumnRow(photo1, photo2, i + 1, i + 2, isLast);
 
-                    // 2. Fila de Imagen
-                    rowsHtml += `
-                        <tr>
-                            <td align="center" style="width: 48%; background-color: #ffffff; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 10px; vertical-align: middle;">
-                                <img src="cid:photo_${photo1.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />
-                            </td>
-                            <td style="width: 4%;"></td>
-                            <td align="center" style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: 10px; vertical-align: middle;">
-                                ${photo2 ? `<img src="cid:photo_${photo2.id}" width="280" height="190" style="display: block; margin: 0 auto; object-fit: cover;" />` : ''}
-                            </td>
-                        </tr>
-                    `;
-
-                    // 3. Fila de Detalles
-                    const borderBottom1 = '1px solid #cbd5e1';
-                    const borderBottom2 = photo2 ? '1px solid #cbd5e1' : '0';
-
-                    const detailsContent1 = `
-                        ${hasAct1 ? `
-                            <div style="margin-bottom: 6px;">
-                                <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo1.actividad)}</span>
-                            </div>
-                        ` : ''}
-                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc1 ? escapeHtml(displayDesc1) : '&nbsp;'}</p>
-                    `;
-
-                    const detailsContent2 = photo2 ? `
-                        ${hasAct2 ? `
-                            <div style="margin-bottom: 6px;">
-                                <span style="font-weight: bold; color: #000000; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: Courier New, monospace; font-size: 8pt;">${escapeHtml(photo2.actividad)}</span>
-                            </div>
-                        ` : ''}
-                        <p style="color: #334155; line-height: 1.4; margin: 0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt;">${hasDesc2 ? escapeHtml(displayDesc2) : '&nbsp;'}</p>
-                    ` : '';
-
-                    rowsHtml += `
-                        <tr>
-                            <td style="width: 48%; background-color: #ffffff; border-bottom: ${borderBottom1}; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 12px; font-size: 9pt; vertical-align: top;">
-                                ${detailsContent1}
-                            </td>
-                            <td style="width: 4%;"></td>
-                            <td style="width: 48%; background-color: ${photo2 ? '#ffffff' : 'transparent'}; border-bottom: ${borderBottom2}; border-left: ${photo2 ? '1px solid #cbd5e1' : '0'}; border-right: ${photo2 ? '1px solid #cbd5e1' : '0'}; padding: ${photo2 ? '12px' : '0px'}; font-size: 9pt; vertical-align: top;">
-                                ${detailsContent2}
-                            </td>
-                        </tr>
-                    `;
-
-                    if (this.selectedFormat === 'formato2') {
+                    // Salto de página después de cada fila (cada 2 fotos) en Word
+                    if ((i + 2) < this.reportPhotos.length) {
                         rowsHtml += `
-                            <tr style="page-break-before: always; mso-special-character:line-break;">
-                                <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
-                            </tr>
-                        `;
-                    } else {
-                        rowsHtml += `
-                            <!-- Fila de Espaciado -->
-                            <tr style="height: 15px;">
-                                <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
-                            </tr>
+                            </table>
+                            <br clear="all" style="page-break-before: always; mso-special-character:line-break;" />
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px;">
+                                <colgroup>
+                                    <col style="width: 48%;" />
+                                    <col style="width: 4%;" />
+                                    <col style="width: 48%;" />
+                                </colgroup>
                         `;
                     }
                 }
@@ -1134,6 +1191,20 @@ export const ExportScreen = {
                             <td colspan="3" style="font-size: 1pt; line-height: 1pt;">&nbsp;</td>
                         </tr>
                     `;
+
+                    // Salto de página después de cada ficha técnica en Word
+                    if ((i + 2) < this.reportPhotos.length) {
+                        rowsHtml += `
+                            </table>
+                            <br clear="all" style="page-break-before: always; mso-special-character:line-break;" />
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px;">
+                                <colgroup>
+                                    <col style="width: 48%;" />
+                                    <col style="width: 4%;" />
+                                    <col style="width: 48%;" />
+                                </colgroup>
+                        `;
+                    }
                 }
             }
 
@@ -1253,13 +1324,11 @@ export const ExportScreen = {
 
             // Parte 3: Incrustar Logo (si existe)
             if (hasLogo) {
-                const logoRaw = logoB64.replace(/^data:image\/[a-z]+;base64,/, '');
-                const logoMime = logoB64.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
                 mhtmlParts.push(`--${boundary}\r\n`);
                 mhtmlParts.push(`Content-Type: ${logoMime}\r\n`);
                 mhtmlParts.push("Content-Transfer-Encoding: base64\r\n");
                 mhtmlParts.push("Content-ID: <logo>\r\n\r\n");
-                mhtmlParts.push(logoRaw + "\r\n\r\n");
+                mhtmlParts.push(chunkBase64(logoRaw) + "\r\n\r\n");
             }
 
             // Parte 4: Incrustar fotos
@@ -1268,7 +1337,7 @@ export const ExportScreen = {
                 mhtmlParts.push(`Content-Type: ${embed.mime}\r\n`);
                 mhtmlParts.push("Content-Transfer-Encoding: base64\r\n");
                 mhtmlParts.push(`Content-ID: <${embed.cid}>\r\n\r\n`);
-                mhtmlParts.push(embed.data + "\r\n\r\n");
+                mhtmlParts.push(chunkBase64(embed.data) + "\r\n\r\n");
             }
 
             // Parte 5: Fin MHTML
