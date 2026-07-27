@@ -161,7 +161,7 @@ export const ProjectFileManager = {
                 await LogiNative.dbPutCatalog(importedProj.id, importedCatalog);
             }
 
-            // 3. Extraer e Indexar Fotografías en IndexedDB
+            // 3. Extraer e Indexar Fotografías en IndexedDB de forma optimizada en lotes
             let extractedCount = 0;
             const blobsFolder = zip.folder('blobs');
 
@@ -173,11 +173,23 @@ export const ProjectFileManager = {
                     }
                 });
 
-                for (const item of entries) {
-                    const b64Data = await item.entry.async('base64');
-                    const filename = item.name.replace(/^blobs\//, '');
-                    await LogiNative.storeBlob(filename, b64Data);
-                    extractedCount++;
+                const batchSize = 100;
+                for (let i = 0; i < entries.length; i += batchSize) {
+                    const chunk = entries.slice(i, i + batchSize);
+                    
+                    // Extraer base64 del zip en paralelo para este lote
+                    const blobsList = await Promise.all(chunk.map(async (item) => {
+                        const b64Data = await item.entry.async('base64');
+                        const filename = item.name.replace(/^blobs\//, '');
+                        return { filename, base64: b64Data };
+                    }));
+
+                    // Almacenar todo el lote en una sola transacción
+                    await LogiNative.storeBlobsBatch(blobsList);
+                    extractedCount += chunk.length;
+
+                    // Mostrar progreso del lote
+                    window.showLoader("Abriendo Proyecto", `Importando evidencias: ${extractedCount} de ${entries.length}...`);
                 }
             }
 
@@ -254,9 +266,11 @@ export const ProjectFileManager = {
                 }
             });
 
-            // 5. Procesar entradas e imágenes
+            // 5. Procesar entradas e imágenes en lotes
             let importedCount = 0;
             const itemsData = [];
+            const blobsToStore = [];
+
             for (const entry of entries) {
                 const id = String(entry.id);
                 const base64Data = photoMap[id];
@@ -266,9 +280,7 @@ export const ProjectFileManager = {
                 }
 
                 const filename = `${id}.jpg`;
-
-                // Guardar la foto en IndexedDB
-                await LogiNative.storeBlob(filename, base64Data);
+                blobsToStore.push({ filename, base64: base64Data });
 
                 // Parsear fecha
                 let ts = Date.now();
@@ -289,6 +301,14 @@ export const ProjectFileManager = {
                 };
                 itemsData.push(itemData);
                 importedCount++;
+            }
+
+            // Almacenar las imágenes en IndexedDB por lotes
+            const batchSize = 100;
+            for (let i = 0; i < blobsToStore.length; i += batchSize) {
+                const chunk = blobsToStore.slice(i, i + batchSize);
+                await LogiNative.storeBlobsBatch(chunk);
+                window.showLoader("Importando Sincro JSON", `Importando imágenes a base de datos: ${Math.min(i + batchSize, blobsToStore.length)} de ${blobsToStore.length}...`);
             }
 
             if (itemsData.length > 0) {

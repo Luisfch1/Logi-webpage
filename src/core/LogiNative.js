@@ -108,6 +108,37 @@ export const LogiNative = {
         });
     },
 
+    storeBlobsBatch: async (blobsList) => {
+        if (!Array.isArray(blobsList) || blobsList.length === 0) return false;
+        const db = await getDB();
+        if (!db) return false;
+
+        return new Promise(r => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+
+            for (const blob of blobsList) {
+                const { filename, base64 } = blob;
+                const fullBase64 = base64.includes('data:image') ? base64 : `data:image/jpeg;base64,${base64}`;
+                const cleanName = String(filename).trim();
+                const noExt = cleanName.replace(/\.jpg$/i, '');
+                const noCap = cleanName.replace(/^cap_/, '');
+                const rawId = noCap.replace(/\.jpg$/i, '');
+
+                store.put(fullBase64, cleanName);
+                if (noExt !== cleanName) store.put(fullBase64, noExt);
+                if (noCap !== cleanName) store.put(fullBase64, noCap);
+                if (rawId !== cleanName) store.put(fullBase64, `${rawId}.jpg`);
+            }
+
+            tx.oncomplete = () => r(true);
+            tx.onerror = (e) => {
+                console.error("[LogiNative] Error en storeBlobsBatch:", e);
+                r(false);
+            };
+        });
+    },
+
     deleteBlob: async (filename) => {
         const db = await getDB();
         if (!db) return false;
