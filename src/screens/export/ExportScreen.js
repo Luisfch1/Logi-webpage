@@ -400,6 +400,11 @@ export const ExportScreen = {
             return;
         }
 
+        if (this.reportPhotos.length > 300) {
+            const proceed = confirm(`Advertencia: Vas a generar un PDF con ${this.reportPhotos.length} fotos. Esto consumirá una gran cantidad de memoria y podría congelar o cerrar la pestaña del navegador.\n\nTe recomendamos filtrar por rango de fechas en la pantalla anterior.\n\n¿Deseas continuar de todos modos?`);
+            if (!proceed) return;
+        }
+
         window.showLoader("Generando Reporte", "Cargando metadatos y fotos de IndexedDB...");
 
         try {
@@ -413,7 +418,7 @@ export const ExportScreen = {
             let photoCardsHtml = '';
             for (let i = 0; i < this.reportPhotos.length; i++) {
                 const photo = this.reportPhotos[i];
-                const base64Data = await LogiNative.readBlobAsBase64(photo.filename);
+                const imgUrl = await LogiNative.getBlobUri(photo.filename);
                 
                 const catalogItem = State.catalog?.find(c => String(c.item).toUpperCase() === (photo.actividad || '').toUpperCase());
                 const catalogDesc = catalogItem ? catalogItem.descripcion : '';
@@ -445,7 +450,7 @@ export const ExportScreen = {
                             FOTO #${i + 1}
                         </div>
                         <div class="photo-img-box" style="width: 100%; height: 230px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e2e8f0;">
-                            <img class="photo-img" src="${base64Data || ''}" alt="Evidencia" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <img class="photo-img" src="${imgUrl || ''}" alt="Evidencia" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
                         ${detailsHtml}
                     </div>
@@ -614,6 +619,11 @@ export const ExportScreen = {
         if (this.reportPhotos.length === 0) {
             alert("No hay fotos seleccionadas para exportar.");
             return;
+        }
+
+        if (this.reportPhotos.length > 300) {
+            const proceed = confirm(`Advertencia: Vas a generar un documento Word con ${this.reportPhotos.length} fotos. Esto consumirá una gran cantidad de memoria y podría fallar o congelar el navegador.\n\nTe recomendamos filtrar por rango de fechas en la pantalla anterior.\n\n¿Deseas continuar de todos modos?`);
+            if (!proceed) return;
         }
 
         window.showLoader("Generando Word", "Construyendo documento editable...");
