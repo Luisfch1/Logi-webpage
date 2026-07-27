@@ -116,19 +116,21 @@ class StateManager {
             this.projects = (rawProjects || []).map(p => this._sanitize(p)).filter(Boolean);
 
             if (this.projects.length === 0) {
-                const defProj = { id: 'p_casa_talud', name: 'CASA TALUD', createdAt: Date.now() };
+                const defProj = { id: 'p_casa_talud', name: 'CASA TALUD', createdAt: Date.now(), lastAccessed: Date.now() };
                 await LogiNative.dbPut('meta', defProj);
                 this.projects = [defProj];
             }
 
-            const activeProjId = localStorage.getItem('last_active_project_id');
-            const found = this.projects.find(p => p.id === activeProjId);
-            this.currentProject = found || this.projects[0];
+            // Ordenar por última modificación / acceso
+            this.projects.sort((a, b) => (b.lastAccessed || b.createdAt) - (a.lastAccessed || a.createdAt));
+
+            // No cargar proyecto por defecto al inicio
+            this.currentProject = null;
 
             const rawItems = await LogiNative.dbGetAll('items_meta');
             this._allItems = (rawItems || []).map(i => this._sanitize(i)).filter(Boolean);
 
-            this.catalog = await LogiNative.dbGetCatalog(this.currentProject.id);
+            this.catalog = [];
 
             this.filterItems();
             this.isLoaded = true;
@@ -157,6 +159,19 @@ class StateManager {
 
     async setCurrentProject(proj, keepHandle = false) {
         if (!proj) return;
+        
+        proj.lastAccessed = Date.now();
+        await LogiNative.dbPut('meta', proj);
+
+        // Mantener la lista de proyectos ordenada
+        const idx = this.projects.findIndex(p => p.id === proj.id);
+        if (idx !== -1) {
+            this.projects[idx] = proj;
+        } else {
+            this.projects.unshift(proj);
+        }
+        this.projects.sort((a, b) => (b.lastAccessed || b.createdAt) - (a.lastAccessed || a.createdAt));
+
         this.currentProject = proj;
         if (!keepHandle) {
             this.currentProjectFileHandle = null;
@@ -165,6 +180,9 @@ class StateManager {
         this.catalog = await LogiNative.dbGetCatalog(proj.id);
         this.filterItems();
         this.notify('project');
+        
+        // Redirigir a la pestaña de galería (capture) para empezar a trabajar
+        this.setTab('capture');
     }
 
     async closeProject() {
@@ -174,6 +192,8 @@ class StateManager {
         this.catalog = [];
         this.items = [];
         this.notify('project');
+        // Redirigir a la pestaña de proyectos
+        this.setTab('projects');
     }
 
     async updateCatalog(projectId, catalogItems) {
@@ -194,7 +214,7 @@ class StateManager {
 
     async createProject(name) {
         const id = 'p_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString(36);
-        const proj = { id, name: name.toUpperCase(), createdAt: Date.now() };
+        const proj = { id, name: name.toUpperCase(), createdAt: Date.now(), lastAccessed: Date.now() };
         await LogiNative.dbPut('meta', proj);
         this.projects.unshift(proj);
         await this.setCurrentProject(proj);
@@ -216,8 +236,9 @@ class StateManager {
         await LogiNative.dbDelete('meta', id);
         this.projects = this.projects.filter(p => p.id !== id);
         if (this.currentProject && this.currentProject.id === id) {
-            this.currentProject = this.projects[0] || null;
-            if (this.currentProject) localStorage.setItem('last_active_project_id', this.currentProject.id);
+            this.currentProject = null;
+            localStorage.removeItem('last_active_project_id');
+            this.setTab('projects');
         }
         this.filterItems();
         this.notify('projects');

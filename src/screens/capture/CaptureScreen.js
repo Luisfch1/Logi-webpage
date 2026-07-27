@@ -56,6 +56,7 @@ export const CaptureScreen = {
     searchTerm: '',
     renderedIds: [],
     lastClickedId: null,
+    displayLimit: 60,
 
     getLayout() {
         const projName = State.currentProject?.name || 'SELECCIONAR PROYECTO';
@@ -64,7 +65,7 @@ export const CaptureScreen = {
         return `
             <div class="flex flex-col h-full w-full overflow-hidden p-5 space-y-4">
                 <!-- Header del Workspace -->
-                <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
+                <div class="flex justify-between items-center border-b border-white/10 pb-2.5 animate-fade-in">
                     <div>
                         <h1 class="text-2xl font-bold font-headline text-white" id="capture-project-title">${projName}</h1>
                     </div>
@@ -149,12 +150,18 @@ export const CaptureScreen = {
     init() {
         this.selectedIds = [];
         this.searchTerm = '';
+        this.displayLimit = 60;
         this.bindEvents();
         this.renderGrid();
 
         State.subscribe((state, changeType) => {
             if (changeType === 'items' || changeType === 'project') {
                 this.selectedIds = [];
+                this.displayLimit = 60;
+                const container = document.getElementById('desktop-capture-groups');
+                if (container && container.parentElement) {
+                    container.parentElement.scrollTop = 0;
+                }
                 this.renderGrid();
             }
         });
@@ -172,9 +179,14 @@ export const CaptureScreen = {
 
             searchInput.oninput = (e) => {
                 this.searchTerm = e.target.value;
+                this.displayLimit = 60;
                 if (btnClearSearch) {
                     if (this.searchTerm) btnClearSearch.classList.remove('hidden');
                     else btnClearSearch.classList.add('hidden');
+                }
+                const container = document.getElementById('desktop-capture-groups');
+                if (container && container.parentElement) {
+                    container.parentElement.scrollTop = 0;
                 }
                 this.renderGrid();
             };
@@ -183,8 +195,13 @@ export const CaptureScreen = {
         if (btnClearSearch) {
             btnClearSearch.onclick = () => {
                 this.searchTerm = '';
+                this.displayLimit = 60;
                 if (searchInput) searchInput.value = '';
                 btnClearSearch.classList.add('hidden');
+                const container = document.getElementById('desktop-capture-groups');
+                if (container && container.parentElement) {
+                    container.parentElement.scrollTop = 0;
+                }
                 this.renderGrid();
             };
         }
@@ -273,14 +290,11 @@ export const CaptureScreen = {
 
         // Clic fuera de las fotos deselecciona todo
         document.addEventListener('click', (e) => {
-            // Solo actuar si estamos en la vista de captura
             const captureView = document.getElementById('desktop-capture-groups');
             if (!captureView) return;
 
-            // Verificar si hay elementos seleccionados
             if (this.selectedIds.length === 0) return;
 
-            // Verificar si el clic fue en un elemento interactivo que debe mantener la selección
             const isInsideCard = e.target.closest('.btn-select-card');
             const isInsideBatchControls = e.target.closest('#btn-apply-batch') || 
                                           e.target.closest('#btn-delete-batch') || 
@@ -295,11 +309,46 @@ export const CaptureScreen = {
             const isInsideModal = e.target.closest('#photo-zoom-modal');
 
             if (!isInsideCard && !isInsideBatchControls && !isInsideHeaderControls && !isInsideModal) {
-                // Deseleccionar todas
                 this.selectedIds = [];
                 this.renderGrid();
             }
         });
+
+        // Vincular scroll del contenedor principal para Infinite Scroll
+        const container = document.getElementById('desktop-capture-groups');
+        if (container) {
+            const scrollContainer = container.parentElement;
+            if (scrollContainer) {
+                scrollContainer.onscroll = () => {
+                    const scrollPos = scrollContainer.scrollTop + scrollContainer.clientHeight;
+                    const threshold = scrollContainer.scrollHeight - 300;
+                    if (scrollPos >= threshold) {
+                        this.loadMoreItems();
+                    }
+                };
+            }
+        }
+    },
+
+    loadMoreItems() {
+        let items = State.items;
+        const catalog = State.catalog || [];
+        const query = (this.searchTerm || '').trim().toLowerCase();
+        if (query) {
+            items = items.filter(it => {
+                const activityCode = (it.actividad || '').toLowerCase();
+                const desc = (it.descripcion || '').toLowerCase();
+                const date = (it.fechaStr || '').toLowerCase();
+                const catalogItem = catalog.find(c => String(c.item).toLowerCase() === activityCode);
+                const catalogDesc = catalogItem ? (catalogItem.descripcion || '').toLowerCase() : '';
+                return activityCode.includes(query) || desc.includes(query) || date.includes(query) || catalogDesc.includes(query);
+            });
+        }
+
+        if (this.displayLimit < items.length) {
+            this.displayLimit += 60;
+            this.renderGrid();
+        }
     },
 
     pickFilesFromPC() {
@@ -325,7 +374,6 @@ export const CaptureScreen = {
                 fileChunks.push(files.slice(i, i + concurrency));
             }
 
-            // Mostrar un indicador visual de carga
             const uploadBtn = document.getElementById('btn-desktop-upload');
             const originalHtml = uploadBtn ? uploadBtn.innerHTML : '';
             if (uploadBtn) {
@@ -442,7 +490,6 @@ export const CaptureScreen = {
                 const desc = (it.descripcion || '').toLowerCase();
                 const date = (it.fechaStr || '').toLowerCase();
                 
-                // Buscar la descripción correspondiente en el catálogo de ítems
                 const catalogItem = catalog.find(c => String(c.item).toLowerCase() === activityCode);
                 const catalogDesc = catalogItem ? (catalogItem.descripcion || '').toLowerCase() : '';
                 
@@ -452,6 +499,8 @@ export const CaptureScreen = {
                        catalogDesc.includes(query);
             });
         }
+
+        const totalFilteredCount = items.length;
 
         if (State.items.length === 0) {
             container.innerHTML = `
@@ -465,7 +514,7 @@ export const CaptureScreen = {
             return;
         }
 
-        if (items.length === 0) {
+        if (totalFilteredCount === 0) {
             container.innerHTML = `
                 <div class="p-16 border-2 border-dashed border-white/10 rounded-3xl text-center space-y-3 bg-black/20">
                     <span class="material-symbols-outlined text-4xl text-white/20">search_off</span>
@@ -477,9 +526,11 @@ export const CaptureScreen = {
             return;
         }
 
+        const slicedItems = items.slice(0, this.displayLimit);
+
         // Agrupar por Fecha (Día)
         const groups = {};
-        items.forEach(it => {
+        slicedItems.forEach(it => {
             const groupKey = it.fechaStr || 'FECHA DESCONOCIDA';
             if (!groups[groupKey]) groups[groupKey] = [];
             groups[groupKey].push(it);
@@ -495,10 +546,10 @@ export const CaptureScreen = {
             });
         });
 
-        container.innerHTML = sortedGroupKeys.map(dateKey => {
+        let gridHtml = sortedGroupKeys.map(dateKey => {
             const groupItems = groups[dateKey];
             return `
-                <div class="space-y-4">
+                <div class="space-y-4 animate-fade-in">
                     <!-- Encabezado de Fecha con Selección Grupal -->
                     <div class="flex items-center justify-between border-b border-white/10 pb-2 sticky top-0 bg-[#050505]/95 backdrop-blur-sm py-2.5 z-20">
                         <div class="flex items-center gap-3">
@@ -564,6 +615,17 @@ export const CaptureScreen = {
             `;
         }).join('');
 
+        if (totalFilteredCount > this.displayLimit) {
+            gridHtml += `
+                <div class="col-span-full py-6 flex flex-col items-center justify-center space-y-1 text-white/30 border-t border-white/5 mt-4">
+                    <span class="material-symbols-outlined text-lg animate-spin">sync</span>
+                    <p class="text-[10px] font-mono uppercase tracking-wider">Cargando más evidencias (${this.displayLimit} de ${totalFilteredCount})...</p>
+                </div>
+            `;
+        }
+
+        container.innerHTML = gridHtml;
+
         // 1. Vincular Clic en Tarjeta para Selección
         container.querySelectorAll('.btn-select-card').forEach(card => {
             card.onclick = (e) => {
@@ -574,14 +636,12 @@ export const CaptureScreen = {
                 const id = card.dataset.id;
 
                 if (e.shiftKey && this.lastClickedId && this.renderedIds.includes(this.lastClickedId)) {
-                    // Seleccionar rango entre el último clic y el clic actual
                     const startIdx = this.renderedIds.indexOf(this.lastClickedId);
                     const endIdx = this.renderedIds.indexOf(id);
                     
                     const minIdx = Math.min(startIdx, endIdx);
                     const maxIdx = Math.max(startIdx, endIdx);
                     
-                    // Añadir todos los elementos del rango a la selección
                     for (let i = minIdx; i <= maxIdx; i++) {
                         const targetId = this.renderedIds[i];
                         if (!this.selectedIds.includes(targetId)) {
@@ -589,10 +649,8 @@ export const CaptureScreen = {
                         }
                     }
                     
-                    // Renderizar la grilla de nuevo para actualizar badges e iconos
                     this.renderGrid();
                 } else {
-                    // Clic normal
                     const idx = this.selectedIds.indexOf(id);
                     if (idx === -1) {
                         this.selectedIds.push(id);
@@ -619,7 +677,6 @@ export const CaptureScreen = {
                     }
                 }
                 
-                // Guardar último ID cliqueado como ancla para Shift
                 this.lastClickedId = id;
                 this.updateBatchPanel();
             };
@@ -663,7 +720,6 @@ export const CaptureScreen = {
                 const id = btn.dataset.id;
                 const filename = btn.dataset.file;
                 if (confirm("¿Estás seguro de eliminar esta evidencia del disco?")) {
-                    // Remover de la selección si estaba marcado
                     this.selectedIds = this.selectedIds.filter(i => i !== id);
                     await State.deleteItem(id, filename);
                 }
@@ -732,7 +788,6 @@ export const CaptureScreen = {
             }
         });
 
-        // Actualizar el panel en base a la selección actual
         this.updateBatchPanel();
     }
 };
