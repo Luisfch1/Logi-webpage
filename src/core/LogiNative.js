@@ -19,6 +19,34 @@ function getDB() {
     return _dbPromise;
 }
 
+function toBlob(data) {
+    if (!data) return null;
+    if (data instanceof Blob) return data;
+    if (typeof data === 'string') {
+        try {
+            const cleanB64 = data.includes(';base64,') ? data.split(';base64,')[1] : data;
+            const byteCharacters = atob(cleanB64);
+            const byteArrays = [];
+
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+
+            return new Blob(byteArrays, { type: 'image/jpeg' });
+        } catch (e) {
+            console.error('[LogiNative] Error converting base64 to Blob:', e);
+            return null;
+        }
+    }
+    return null;
+}
+
 const _webMeta = {
     meta: JSON.parse(localStorage.getItem('logi_ws_meta') || '[]'),
     items_meta: JSON.parse(localStorage.getItem('logi_ws_items_meta') || '[]'),
@@ -84,8 +112,9 @@ export const LogiNative = {
         return true;
     },
 
-    storeBlob: async (filename, base64) => {
-        const fullBase64 = base64.includes('data:image') ? base64 : `data:image/jpeg;base64,${base64}`;
+    storeBlob: async (filename, data) => {
+        const blobData = toBlob(data);
+        if (!blobData) return false;
         const db = await getDB();
         if (!db) return false;
 
@@ -98,10 +127,10 @@ export const LogiNative = {
             const noCap = cleanName.replace(/^cap_/, '');
             const rawId = noCap.replace(/\.jpg$/i, '');
 
-            store.put(fullBase64, cleanName);
-            if (noExt !== cleanName) store.put(fullBase64, noExt);
-            if (noCap !== cleanName) store.put(fullBase64, noCap);
-            if (rawId !== cleanName) store.put(fullBase64, `${rawId}.jpg`);
+            store.put(blobData, cleanName);
+            if (noExt !== cleanName) store.put(blobData, noExt);
+            if (noCap !== cleanName) store.put(blobData, noCap);
+            if (rawId !== cleanName) store.put(blobData, `${rawId}.jpg`);
 
             tx.oncomplete = () => r(true);
             tx.onerror = () => r(false);
@@ -117,18 +146,20 @@ export const LogiNative = {
             const tx = db.transaction(STORE_NAME, 'readwrite');
             const store = tx.objectStore(STORE_NAME);
 
-            for (const blob of blobsList) {
-                const { filename, base64 } = blob;
-                const fullBase64 = base64.includes('data:image') ? base64 : `data:image/jpeg;base64,${base64}`;
+            for (const item of blobsList) {
+                const { filename, base64, data } = item;
+                const blobData = toBlob(data || base64);
+                if (!blobData) continue;
+
                 const cleanName = String(filename).trim();
                 const noExt = cleanName.replace(/\.jpg$/i, '');
                 const noCap = cleanName.replace(/^cap_/, '');
                 const rawId = noCap.replace(/\.jpg$/i, '');
 
-                store.put(fullBase64, cleanName);
-                if (noExt !== cleanName) store.put(fullBase64, noExt);
-                if (noCap !== cleanName) store.put(fullBase64, noCap);
-                if (rawId !== cleanName) store.put(fullBase64, `${rawId}.jpg`);
+                store.put(blobData, cleanName);
+                if (noExt !== cleanName) store.put(blobData, noExt);
+                if (noCap !== cleanName) store.put(blobData, noCap);
+                if (rawId !== cleanName) store.put(blobData, `${rawId}.jpg`);
             }
 
             tx.oncomplete = () => r(true);
@@ -161,6 +192,48 @@ export const LogiNative = {
         });
     },
 
+    getBlob: async (filename) => {
+        if (!filename) return null;
+        const db = await getDB();
+        if (!db) return null;
+
+        return new Promise(r => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+
+            const cleanName = String(filename).trim();
+            const noExt = cleanName.replace(/\.jpg$/i, '');
+            const noCap = cleanName.replace(/^cap_/, '');
+            const rawId = noCap.replace(/\.jpg$/i, '');
+
+            const candidates = Array.from(new Set([cleanName, noExt, noCap, rawId, `${rawId}.jpg`, `cap_${rawId}.jpg`]));
+
+            let candidateIdx = 0;
+            const tryNext = () => {
+                if (candidateIdx >= candidates.length) {
+                    r(null);
+                    return;
+                }
+
+                const key = candidates[candidateIdx++];
+                const req = store.get(key);
+                req.onsuccess = () => {
+                    if (req.result) {
+                        if (req.result instanceof Blob) {
+                            r(req.result);
+                        } else {
+                            r(toBlob(req.result));
+                        }
+                    }
+                    else tryNext();
+                };
+                req.onerror = () => tryNext();
+            };
+
+            tryNext();
+        });
+    },
+
     getBlobUri: async (filename) => {
         if (!filename) return null;
         const db = await getDB();
@@ -187,7 +260,13 @@ export const LogiNative = {
                 const key = candidates[candidateIdx++];
                 const req = store.get(key);
                 req.onsuccess = () => {
-                    if (req.result) r(req.result);
+                    if (req.result) {
+                        if (req.result instanceof Blob) {
+                            r(URL.createObjectURL(req.result));
+                        } else {
+                            r(req.result); // Legacy base64 string
+                        }
+                    }
                     else tryNext();
                 };
                 req.onerror = () => tryNext();
@@ -198,7 +277,16 @@ export const LogiNative = {
     },
 
     readBlobAsBase64: async (filename) => {
-        return LogiNative.getBlobUri(filename);
+        const blobOrStr = await LogiNative.getBlob(filename);
+        if (!blobOrStr) return null;
+        if (blobOrStr instanceof Blob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blobOrStr);
+            });
+        }
+        return blobOrStr;
     },
 
     dbPutCatalog: async (projectId, items) => {

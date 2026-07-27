@@ -84,10 +84,9 @@ export const ProjectFileManager = {
             for (const chunk of itemChunks) {
                 await Promise.all(chunk.map(async (it) => {
                     if (it.filename) {
-                        const b64 = await LogiNative.readBlobAsBase64(it.filename);
-                        if (b64) {
-                            const rawBase64 = b64.replace(/^data:image\/[a-z]+;base64,/, '');
-                            blobsFolder.file(it.filename, rawBase64, { base64: true });
+                        const blob = await LogiNative.getBlob(it.filename);
+                        if (blob) {
+                            blobsFolder.file(it.filename, blob);
                             packedCount++;
                         }
                     }
@@ -177,11 +176,11 @@ export const ProjectFileManager = {
                 for (let i = 0; i < entries.length; i += batchSize) {
                     const chunk = entries.slice(i, i + batchSize);
                     
-                    // Extraer base64 del zip en paralelo para este lote
+                    // Extraer Blob del zip en paralelo para este lote
                     const blobsList = await Promise.all(chunk.map(async (item) => {
-                        const b64Data = await item.entry.async('base64');
+                        const blobData = await item.entry.async('blob');
                         const filename = item.name.replace(/^blobs\//, '');
-                        return { filename, base64: b64Data };
+                        return { filename, data: blobData };
                     }));
 
                     // Almacenar todo el lote en una sola transacción
