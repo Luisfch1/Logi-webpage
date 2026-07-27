@@ -202,8 +202,6 @@ export const ProjectFileManager = {
             // 5. Establecer proyecto activo y recargar
             await State.loadFromDisk();
             await State.setCurrentProject(importedProj, true);
-
-            alert(`¡Proyecto "${importedProj.name}" abierto exitosamente! (${extractedCount} fotos restauradas)`);
         } catch (err) {
             console.error('[ProjectFileManager] Error al abrir .logiproject:', err);
             alert("Error al abrir el proyecto: " + err.message);
@@ -319,8 +317,6 @@ export const ProjectFileManager = {
             if (targetProj) {
                 await State.setCurrentProject(targetProj, true);
             }
-
-            alert(`¡Importación completada con éxito! Se cargaron ${importedCount} fotos al proyecto "${targetProj.name.toUpperCase()}".`);
         } catch (err) {
             console.error('[ProjectFileManager] Error al importar JSON de CONTROL:', err);
             alert("Error al importar JSON: " + err.message);
